@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neural Clip Studio — AI Viral Clipper</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Impact&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0c0d0e;
+    }
+    .glow-yellow {
+      box-shadow: 0 0 25px -5px rgba(250, 204, 21, 0.25);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="text-neutral-100 min-h-screen flex flex-col antialiased selection:bg-yellow-400 selection:text-black">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-neutral-800/80 bg-neutral-900/60 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center text-black font-black text-xl shadow-lg shadow-yellow-500/20">
+        ⚡
+      </div>
+      <div>
+        <h1 class="text-lg font-extrabold tracking-tight flex items-center gap-2">
+          Neural Clip Studio <span class="text-[10px] bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 px-2 py-0.5 rounded-full font-bold">TRIBE v2 ENGINE</span>
+        </h1>
+        <p class="text-xs text-neutral-400">100% Local GPU & Neural Brain-Attention Clipper</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <span class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Local Engine Ready
+      </span>
+      <button id="openPublishHistoryBtn" class="text-xs font-semibold hover:text-yellow-400 transition-colors flex items-center gap-1.5 text-neutral-300 border border-neutral-800 bg-neutral-900/80 px-3 py-1.5 rounded-xl cursor-pointer">
+        <i data-lucide="history" class="w-3.5 h-3.5"></i> Publish Logs
+      </button>
+      <button id="openSocialSettingsBtn" class="text-xs font-semibold hover:text-yellow-400 transition-colors flex items-center gap-1.5 text-neutral-300 border border-neutral-800 bg-neutral-900/80 px-3 py-1.5 rounded-xl cursor-pointer">
+        <i data-lucide="share-2" class="w-3.5 h-3.5 text-yellow-400"></i> Social Connect
+      </button>
+      <a href="#library" class="text-xs font-semibold hover:text-yellow-400 transition-colors flex items-center gap-1.5 text-neutral-300">
+        <i data-lucide="library" class="w-4 h-4"></i> Clip Library
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+    <!-- Left Column: Settings & Input (7 Cols) -->
+    <div class="lg:col-span-7 space-y-6">
+
+      <!-- 1. Source Input Card -->
+      <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-neutral-400 mb-4 flex items-center gap-2">
+          <i data-lucide="link" class="w-4 h-4 text-yellow-400"></i> Video Source
+        </h2>
+
+        <!-- URL Input -->
+        <div class="relative mb-4">
+          <input 
+            type="text" 
+            id="youtubeUrl" 
+            placeholder="Paste YouTube Video URL (e.g., https://youtu.be/xyz)..." 
+            class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3.5 pl-11 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-yellow-400 transition-colors"
+          />
+          <i data-lucide="youtube" class="w-5 h-5 text-red-500 absolute left-3.5 top-3.5"></i>
+        </div>
+
+        <div class="flex items-center gap-4 text-xs text-neutral-500 my-2">
+          <div class="flex-1 border-t border-neutral-800"></div>
+          <span>OR LOCAL FILE</span>
+          <div class="flex-1 border-t border-neutral-800"></div>
+        </div>
+
+        <!-- Local Drag & Drop Area -->
+        <label for="localFile" class="border-2 border-dashed border-neutral-800 hover:border-neutral-700 bg-neutral-950/40 rounded-xl p-4 flex items-center justify-center gap-3 cursor-pointer transition-colors block text-center">
+          <input type="file" id="localFile" accept="video/mp4,video/mkv,video/webm" class="hidden" />
+          <i data-lucide="upload-cloud" class="w-5 h-5 text-neutral-400 inline"></i>
+          <span class="text-xs text-neutral-400 font-medium" id="fileLabel">Drag & drop video file or click to browse</span>
+        </label>
+      </div>
+
+      <!-- 2. Clip Controls (30s / 60s / 90s / 180s) -->
+      <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
+            <i data-lucide="clock" class="w-4 h-4 text-yellow-400"></i> Duration & Allocation
+          </h2>
+          <span class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Quality First: Capped at 5
+          </span>
+        </div>
+
+        <!-- Duration Selection -->
+        <div>
+          <label class="text-xs font-semibold text-neutral-300 block mb-2.5">Target Clip Duration</label>
+          <div class="grid grid-cols-4 gap-2.5" id="durationPicker">
+            <button type="button" data-val="30" class="dur-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all">
+              <div class="text-base font-black text-neutral-200">30s</div>
+              <div class="text-[10px] text-neutral-400">Quick Hook</div>
+            </button>
+            <button type="button" data-val="60" class="dur-btn p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-yellow-300 text-center transition-all">
+              <div class="text-base font-black">60s</div>
+              <div class="text-[10px] text-yellow-400/80">Standard Short</div>
+            </button>
+            <button type="button" data-val="90" class="dur-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all">
+              <div class="text-base font-black text-neutral-200">90s</div>
+              <div class="text-[10px] text-neutral-400">Story Arc</div>
+            </button>
+            <button type="button" data-val="180" class="dur-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all">
+              <div class="text-base font-black text-neutral-200">180s</div>
+              <div class="text-[10px] text-neutral-400">3-Min Short</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Number of Clips (Capped at 5) -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-xs font-semibold text-neutral-300">Clips to Extract</label>
+            <span class="text-xs text-neutral-400 font-mono" id="clipCountLabel">3 Clips Selected</span>
+          </div>
+          <div class="grid grid-cols-5 gap-2" id="clipCountPicker">
+            <button type="button" data-count="1" class="count-btn py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">1</button>
+            <button type="button" data-count="2" class="count-btn py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">2</button>
+            <button type="button" data-count="3" class="count-btn py-2.5 rounded-xl border border-white bg-white text-black text-xs font-bold">3</button>
+            <button type="button" data-count="4" class="count-btn py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">4</button>
+            <button type="button" data-count="5" class="count-btn py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">5 (Max)</button>
+          </div>
+        </div>
+
+        <!-- Aspect Ratio -->
+        <div>
+          <label class="text-xs font-semibold text-neutral-300 block mb-2">Aspect Ratio & Framing</label>
+          <div class="grid grid-cols-3 gap-2" id="aspectPicker">
+            <button type="button" data-aspect="9:16" class="aspect-btn py-2 rounded-xl border border-blue-500 bg-blue-500/10 text-blue-400 text-xs font-bold">9:16 Vertical</button>
+            <button type="button" data-aspect="16:9" class="aspect-btn py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-400 text-xs font-semibold hover:border-neutral-700">16:9 Landscape</button>
+            <button type="button" data-aspect="1:1" class="aspect-btn py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-400 text-xs font-semibold hover:border-neutral-700">1:1 Square</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Subtitle Styler & Effects -->
+      <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
+          <i data-lucide="type" class="w-4 h-4 text-yellow-400"></i> Caption Theme & Visual Atmosphere
+        </h2>
+
+        <!-- Themes -->
+        <div class="grid grid-cols-3 gap-2.5" id="themePicker">
+          <button type="button" data-theme="hormozi" class="theme-btn p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-left transition-all">
+            <div class="text-xs font-bold text-yellow-300">Hormozi Pop</div>
+            <div class="text-[10px] text-yellow-400/70">Neon Yellow Bounce</div>
+          </button>
+          <button type="button" data-theme="mrbeast" class="theme-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
+            <div class="text-xs font-bold text-neutral-200">Beast Pop</div>
+            <div class="text-[10px] text-neutral-400">Cyan Dynamic Tilt</div>
+          </button>
+          <button type="button" data-theme="raj_shamani" class="theme-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
+            <div class="text-xs font-bold text-neutral-200">Raj Shamani</div>
+            <div class="text-[10px] text-neutral-400">Minimal Amber</div>
+          </button>
+          <button type="button" data-theme="karaoke" class="theme-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
+            <div class="text-xs font-bold text-neutral-200">Karaoke</div>
+            <div class="text-[10px] text-neutral-400">Live Word Sweep</div>
+          </button>
+          <button type="button" data-theme="clean" class="theme-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
+            <div class="text-xs font-bold text-neutral-200">Clean White</div>
+            <div class="text-[10px] text-neutral-400">Classic Subtitle</div>
+          </button>
+        </div>
+
+        <!-- Atmosphere Toggles & Watermark -->
+        <div class="grid grid-cols-2 gap-4 pt-2">
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 block mb-1">Watermark Handle</label>
+            <input type="text" id="watermark" value="@clipstack_A1" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 block mb-1">Custom Header / Title</label>
+            <input type="text" id="headerTitle" placeholder="Auto hook title..." class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-400" />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 pt-1 flex-wrap">
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="aiThumbToggle" checked class="w-4 h-4 accent-amber-400 rounded" />
+            <span class="text-amber-400 font-bold">✨ AI Generated Viral 8K Thumbnail</span> (Hyper-realistic poster)
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="floatingWmToggle" checked class="w-4 h-4 accent-yellow-400 rounded" />
+            <span class="text-yellow-400 font-bold">🌊 Anti-AI Floating Watermark</span> (Drifts across frame to prevent removal)
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="vignetteToggle" checked class="w-4 h-4 accent-yellow-400 rounded" />
+            Vignette Atmosphere
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="grainToggle" checked class="w-4 h-4 accent-yellow-400 rounded" />
+            Cinematic Film Grain
+          </label>
+        </div>
+      </div>
+
+      <!-- 4. Channel Profile & Brand Kit Card -->
+      <div class="bg-neutral-900/90 border border-cyan-500/30 rounded-2xl p-5 shadow-xl relative overflow-hidden space-y-4">
+        <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-neutral-200 flex items-center gap-2">
+            <i data-lucide="shield-check" class="w-4 h-4 text-cyan-400"></i> Channel Profile & Brand Kit
+          </h2>
+          <span class="bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> Active: <span id="brandHandleBadge">@clipstack_A1</span>
+          </span>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <!-- Logo Preview & Upload Trigger -->
+          <div class="relative shrink-0 group">
+            <div class="w-16 h-16 rounded-2xl border-2 border-cyan-400/60 bg-neutral-950 overflow-hidden shadow-lg relative flex items-center justify-center">
+              <img id="brandLogoImg" src="/api/branding/logo" alt="Channel Logo" class="w-full h-full object-cover" onerror="this.src='/api/branding/logo';" />
+            </div>
+            <label for="brandLogoUpload" class="absolute -bottom-1 -right-1 bg-cyan-500 hover:bg-cyan-400 text-black p-1.5 rounded-xl cursor-pointer shadow-md transition-all hover:scale-110 flex items-center justify-center" title="Click to upload/change logo">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+              <input type="file" id="brandLogoUpload" accept="image/png,image/jpeg,image/webp,image/jpg" class="hidden" />
+            </label>
+          </div>
+
+          <!-- Channel Handle & Brand Name Details -->
+          <div class="flex-1 min-w-[200px] space-y-2">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] font-semibold text-neutral-400 block mb-0.5">Brand / Channel Name</label>
+                <input type="text" id="brandChannelName" value="ClipStack" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400" />
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold text-neutral-400 block mb-0.5">Primary Watermark Handle</label>
+                <input type="text" id="brandChannelHandle" value="@clipstack_A1" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-cyan-300 font-mono font-bold focus:outline-none focus:border-cyan-400" />
+              </div>
+            </div>
+
+            <!-- Platform-Specific Social Handles -->
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="text-[10px] font-semibold text-red-400 block mb-0.5 flex items-center gap-1">
+                  <span>🔴</span> YouTube
+                </label>
+                <input type="text" id="brandYtHandle" value="@clipstack_A1" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-2.5 py-1.5 text-xs text-red-300 font-mono focus:outline-none focus:border-red-400" />
+              </div>
+              <div>
+                <label class="text-[10px] font-semibold text-pink-400 block mb-0.5 flex items-center gap-1">
+                  <span>📸</span> Instagram
+                </label>
+                <input type="text" id="brandIgHandle" value="@clip_stacka1" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-2.5 py-1.5 text-xs text-pink-300 font-mono focus:outline-none focus:border-pink-400" />
+              </div>
+              <div>
+                <label class="text-[10px] font-semibold text-cyan-400 block mb-0.5 flex items-center gap-1">
+                  <span>🐦</span> X (Twitter)
+                </label>
+                <input type="text" id="brandXHandle" value="@clipstack_A1" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-2.5 py-1.5 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-400" />
+              </div>
+            </div>
+
+            <!-- Logo Position & Size Controls (Safe from Title Text) -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] font-semibold text-neutral-400 block mb-0.5">Thumbnail Logo Placement</label>
+                <select id="brandLogoPosition" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-2.5 py-1.5 text-xs text-neutral-200 focus:outline-none focus:border-cyan-400">
+                  <option value="bottom_right" selected>Bottom Right (Safe / No overlap)</option>
+                  <option value="bottom_left">Bottom Left</option>
+                  <option value="top_right">Top Right</option>
+                  <option value="top_left">Top Left</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold text-neutral-400 block mb-0.5">Logo Badge Size</label>
+                <select id="brandLogoSize" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-2.5 py-1.5 text-xs text-neutral-200 focus:outline-none focus:border-cyan-400">
+                  <option value="100">Compact (100px)</option>
+                  <option value="125" selected>Standard Sleek (125px)</option>
+                  <option value="160">Medium (160px)</option>
+                  <option value="200">Large (200px)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 flex-wrap gap-2">
+              <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+                <input type="checkbox" id="brandEmbedToggle" checked class="w-4 h-4 accent-cyan-400 rounded" />
+                <span>Auto-embed logo badge on generated thumbnails</span>
+              </label>
+              <button type="button" id="saveBrandingBtn" class="text-xs bg-cyan-500 hover:bg-cyan-400 text-black px-3 py-1 rounded-lg font-bold transition-all flex items-center gap-1 shadow-sm active:scale-95">
+                <i data-lucide="check" class="w-3 h-3"></i> Save Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate Button -->
+      <button 
+        type="button" 
+        id="generateBtn"
+        class="w-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-black font-extrabold text-base py-4 rounded-2xl shadow-xl glow-yellow transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
+      >
+        <i data-lucide="sparkles" class="w-5 h-5"></i> Generate Viral Clips
+      </button>
+
+    </div>
+
+    <!-- Right Column: Live Status & Library (5 Cols) -->
+    <div class="lg:col-span-5 space-y-6">
+
+      <!-- Live Pipeline Monitor Card -->
+      <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-neutral-400 mb-4 flex items-center gap-2">
+          <i data-lucide="activity" class="w-4 h-4 text-yellow-400"></i> Live Neural Console
+        </h2>
+
+        <!-- Progress Bar -->
+        <div class="mb-4">
+          <div class="flex justify-between text-xs text-neutral-400 mb-1.5 font-medium">
+            <span id="statusLabel">Standby</span>
+            <span id="percentLabel" class="font-mono text-yellow-400">0%</span>
+          </div>
+          <div class="w-full bg-neutral-950 rounded-full h-2.5 overflow-hidden border border-neutral-800">
+            <div id="progressBar" class="bg-gradient-to-r from-yellow-400 to-amber-500 h-full w-0 transition-all duration-300"></div>
+          </div>
+        </div>
+
+        <!-- Live Log Terminal Box -->
+        <div id="logBox" class="bg-neutral-950 border border-neutral-800/80 rounded-xl p-3.5 h-60 overflow-y-auto text-xs font-mono text-neutral-400 space-y-1.5 custom-scrollbar">
+          <div class="text-neutral-600">> System initialized. Ready to process video.</div>
+        </div>
+      </div>
+
+      <!-- Quick Preview & Player Modal Container -->
+      <div id="playerBox" class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="play-circle" class="w-4 h-4 text-yellow-400"></i> Clip Player
+          </h3>
+          <button id="closePlayer" class="text-neutral-500 hover:text-white text-xs">✕ Close</button>
+        </div>
+        <div class="aspect-[9/16] bg-black rounded-xl overflow-hidden max-h-[460px] mx-auto border border-neutral-800 relative">
+          <video id="videoPlayer" controls class="w-full h-full object-contain"></video>
+        </div>
+        <div class="mt-4 flex gap-2">
+          <a id="downloadBtn" href="#" download class="flex-1 bg-white hover:bg-neutral-200 text-black text-center font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Clip
+          </a>
+          <button id="playerCopyPathBtn" type="button" class="bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/30 text-center font-bold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95" title="Copy video file path to clipboard">
+            <i data-lucide="copy" class="w-3.5 h-3.5 text-cyan-400"></i> Copy Path
+          </button>
+          <button id="playerDeleteClipBtn" type="button" class="bg-red-950/60 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 hover:border-red-500 text-center font-bold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95" title="Permanently delete video from device and website">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400 hover:text-white"></i> Delete
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Clip Library Section -->
+  <section id="library" class="max-w-6xl w-full mx-auto px-6 py-10 border-t border-neutral-800/80 mt-12">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-xl font-extrabold flex items-center gap-2">
+          <i data-lucide="film" class="text-yellow-400 w-5 h-5"></i> Rendered Clip Library
+        </h2>
+        <p class="text-xs text-neutral-400">All saved clips ready for preview, review, and direct download.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="copyExportsFolderBtn" class="text-xs text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-bold transition-all hover:bg-cyan-500/20 shadow-sm" title="Copy full Windows folder path to clipboard">
+          <i data-lucide="copy" class="w-3.5 h-3.5 text-cyan-400"></i> Copy Folder Path
+        </button>
+        <button id="refreshLibrary" class="text-xs text-neutral-300 hover:text-yellow-400 border border-neutral-800 bg-neutral-900 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Library
+        </button>
+      </div>
+    </div>
+
+    <!-- Clips Grid -->
+    <div id="clipsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <!-- Injected via JavaScript -->
+    </div>
+  </section>
+
+  <!-- 1-Click Social Publish Modal -->
+  <div id="publishModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="max-w-xl w-full bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
+        <div>
+          <h3 class="text-base font-extrabold flex items-center gap-2 text-white">
+            <span class="text-yellow-400 text-lg">🚀</span> 1-Click Social Auto-Publisher
+          </h3>
+          <p class="text-xs text-neutral-400">Dispatch this reel across YouTube Shorts, Instagram Reels, TikTok & Webhooks.</p>
+        </div>
+        <button id="closePublishModal" class="text-neutral-500 hover:text-white p-1 rounded-lg text-sm">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+        <!-- Clip summary pill -->
+        <div class="flex items-center gap-3 p-3 bg-neutral-950 rounded-xl border border-neutral-800">
+          <img id="pubClipThumb" src="" class="w-12 h-16 object-cover rounded-lg border border-neutral-700 bg-neutral-900 shrink-0" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
+          <div class="flex-1 min-w-0">
+            <div id="pubClipTitle" class="font-bold text-white text-xs truncate">Clip Title</div>
+            <div class="text-[11px] text-neutral-400 flex items-center gap-2 mt-1">
+              <span id="pubClipId" class="font-mono text-yellow-400/90">clip_id</span>
+              <span>•</span>
+              <span id="pubClipDuration" class="text-neutral-300">30s</span>
+              <span>•</span>
+              <span class="text-emerald-400 font-semibold">Ready to Broadcast</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Target Platform Selector -->
+        <div>
+          <label class="block font-bold uppercase tracking-wider text-[11px] text-neutral-400 mb-2">Target Platforms</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-neutral-800 bg-neutral-950/70 cursor-pointer hover:border-neutral-700 transition-colors">
+              <input type="checkbox" id="pubYt" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4">
+              <div>
+                <div class="font-bold text-white text-xs flex items-center gap-1.5"><span class="text-red-500">▶</span> YouTube Shorts</div>
+                <div class="text-[10px] text-neutral-500">Auto #Shorts & Resumable</div>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-neutral-800 bg-neutral-950/70 cursor-pointer hover:border-neutral-700 transition-colors">
+              <input type="checkbox" id="pubIg" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4">
+              <div>
+                <div class="font-bold text-white text-xs flex items-center gap-1.5"><span class="text-pink-500">📸</span> Instagram Reels</div>
+                <div class="text-[10px] text-neutral-500">Meta Graph API v19.0</div>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-neutral-800 bg-neutral-950/70 cursor-pointer hover:border-neutral-700 transition-colors">
+              <input type="checkbox" id="pubTt" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4">
+              <div>
+                <div class="font-bold text-white text-xs flex items-center gap-1.5"><span class="text-cyan-400">🎵</span> TikTok</div>
+                <div class="text-[10px] text-neutral-500">Viral Sound & FYP</div>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-neutral-800 bg-neutral-950/70 cursor-pointer hover:border-neutral-700 transition-colors">
+              <input type="checkbox" id="pubWh" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4">
+              <div>
+                <div class="font-bold text-white text-xs flex items-center gap-1.5"><span class="text-amber-400">⚡</span> Webhook</div>
+                <div class="text-[10px] text-neutral-500">Make / Zapier / Blotato</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Copy & Content Generator -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="font-bold uppercase tracking-wider text-[11px] text-neutral-400">Viral Copy & Hook</label>
+            <button id="pubGenerateCopyBtn" type="button" class="text-[11px] bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 px-2.5 py-1 rounded-lg flex items-center gap-1 font-bold transition-colors">
+              <i data-lucide="sparkles" class="w-3 h-3"></i> Auto-Generate Viral Copy
+            </button>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-neutral-500 uppercase font-bold block mb-1">Title / Headline</label>
+            <input type="text" id="pubTitle" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-yellow-400">
+          </div>
+
+          <div>
+            <label class="text-[10px] text-neutral-500 uppercase font-bold block mb-1">Caption / Description</label>
+            <textarea id="pubCaption" rows="3" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-yellow-400 custom-scrollbar"></textarea>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-neutral-500 uppercase font-bold block mb-1">Hashtags</label>
+            <input type="text" id="pubHashtags" placeholder="#Shorts #Reels #Viral #Trending" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-yellow-400">
+          </div>
+        </div>
+
+        <!-- Privacy & Scheduling -->
+        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-neutral-800/80">
+          <div>
+            <label class="text-[10px] text-neutral-500 uppercase font-bold block mb-1">Visibility</label>
+            <select id="pubPrivacy" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-400">
+              <option value="public" selected>Public (Instant Viral)</option>
+              <option value="unlisted">Unlisted (Private Review)</option>
+              <option value="private">Private (Draft Mode)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] text-neutral-500 uppercase font-bold block mb-1">Delivery Timing</label>
+            <select id="pubSchedule" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-400">
+              <option value="instant" selected>Publish Immediately ⚡</option>
+              <option value="tonight">Peak Hour Tonight (7:30 PM)</option>
+              <option value="tomorrow">Tomorrow Morning (9:00 AM)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Live Publish Feedback Banner -->
+        <div id="pubStatusBanner" class="p-3.5 rounded-xl border border-neutral-800 bg-neutral-950 hidden space-y-2">
+          <div id="pubStatusMsg" class="font-bold text-xs"></div>
+          <div id="pubResultsList" class="space-y-1.5 text-[11px]"></div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 border-t border-neutral-800 bg-neutral-950/60 flex items-center justify-between">
+        <button id="cancelPublishBtn" class="text-neutral-400 hover:text-white font-semibold text-xs py-2 px-4 rounded-xl border border-neutral-800 bg-neutral-900">
+          Cancel
+        </button>
+        <button id="confirmPublishBtn" class="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-black font-extrabold text-xs py-2.5 px-6 rounded-xl shadow-lg glow-yellow flex items-center gap-2 transition-all active:scale-95">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i> Launch & Publish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Platform Connect Settings Modal -->
+  <div id="socialSettingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="max-w-2xl w-full bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
+        <div>
+          <h3 class="text-base font-extrabold flex items-center gap-2 text-white">
+            <span class="text-yellow-400 text-lg">⚡</span> 2-Click Social Media Connect
+          </h3>
+          <p class="text-xs text-neutral-400">Directly connect your accounts with 2 clicks & 2FA. No Client Secrets needed!</p>
+        </div>
+        <button id="closeSocialSettingsModal" class="text-neutral-500 hover:text-white p-1 rounded-lg text-sm">✕</button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+        
+        <!-- Zero Setup Hero Banner -->
+        <div class="p-3.5 bg-gradient-to-r from-yellow-400/10 via-amber-500/10 to-transparent border border-yellow-400/20 rounded-xl space-y-1">
+          <div class="font-bold text-yellow-300 flex items-center gap-1.5 text-xs">
+            <span>✨</span> 2-Click Direct Login Active (Zero Developer Setup)
+          </div>
+          <div class="text-[11px] text-neutral-400">
+            Click <strong>Connect</strong> to launch the official sign-in window on your screen. Enter your email, password & 2FA. Your session links instantly!
+          </div>
+        </div>
+
+        <!-- 1. Direct Accounts List -->
+        <div class="space-y-3">
+          <div class="font-bold uppercase tracking-wider text-[11px] text-neutral-400">Connected Accounts</div>
+
+          <!-- YouTube Card -->
+          <div class="p-3.5 bg-neutral-950 rounded-xl border border-neutral-800 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-500 text-lg shrink-0">
+                ▶
+              </div>
+              <div class="min-w-0">
+                <div class="font-bold text-white text-xs flex items-center gap-2">
+                  YouTube Shorts
+                  <span id="ytBadge" class="text-[9px] px-2 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400 border border-neutral-700">Checking...</span>
+                </div>
+                <div id="ytDesc" class="text-[10px] text-neutral-500 truncate mt-0.5">Google Sign-In with 2FA support</div>
+              </div>
+            </div>
+            <div class="shrink-0 flex items-center gap-2">
+              <button id="ytConnectBtn" class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow transition-all flex items-center gap-1.5">
+                <i data-lucide="log-in" class="w-3.5 h-3.5"></i> Connect Google
+              </button>
+              <button id="ytDisconnectBtn" class="bg-neutral-800 hover:bg-red-950 hover:text-red-300 text-red-400 font-bold text-xs py-2 px-3 rounded-xl border border-neutral-700 hidden">
+                Disconnect
+              </button>
+            </div>
+          </div>
+
+          <!-- Instagram Card -->
+          <div class="p-3.5 bg-neutral-950 rounded-xl border border-neutral-800 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-pink-600/10 border border-pink-500/20 flex items-center justify-center text-pink-500 text-lg shrink-0">
+                📸
+              </div>
+              <div class="min-w-0">
+                <div class="font-bold text-white text-xs flex items-center gap-2">
+                  Instagram Reels
+                  <span id="igBadge" class="text-[9px] px-2 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400 border border-neutral-700">Checking...</span>
+                </div>
+                <div id="igDesc" class="text-[10px] text-neutral-500 truncate mt-0.5">Direct Instagram login with 2FA support</div>
+              </div>
+            </div>
+            <div class="shrink-0 flex items-center gap-2">
+              <button id="igConnectBtn" class="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow transition-all flex items-center gap-1.5">
+                <i data-lucide="log-in" class="w-3.5 h-3.5"></i> Connect Instagram
+              </button>
+              <button id="igDisconnectBtn" class="bg-neutral-800 hover:bg-red-950 hover:text-red-300 text-red-400 font-bold text-xs py-2 px-3 rounded-xl border border-neutral-700 hidden">
+                Disconnect
+              </button>
+            </div>
+          </div>
+
+          <!-- TikTok Card -->
+          <div class="p-3.5 bg-neutral-950 rounded-xl border border-neutral-800 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-cyan-600/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-lg shrink-0">
+                🎵
+              </div>
+              <div class="min-w-0">
+                <div class="font-bold text-white text-xs flex items-center gap-2">
+                  TikTok
+                  <span id="ttBadge" class="text-[9px] px-2 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400 border border-neutral-700">Checking...</span>
+                </div>
+                <div id="ttDesc" class="text-[10px] text-neutral-500 truncate mt-0.5">Link TikTok via password or QR scan</div>
+              </div>
+            </div>
+            <div class="shrink-0 flex items-center gap-2">
+              <button id="ttConnectBtn" class="bg-neutral-800 hover:bg-neutral-700 text-cyan-300 border border-cyan-500/30 font-bold text-xs py-2 px-3.5 rounded-xl shadow transition-all flex items-center gap-1.5">
+                <i data-lucide="log-in" class="w-3.5 h-3.5"></i> Connect TikTok
+              </button>
+              <button id="ttDisconnectBtn" class="bg-neutral-800 hover:bg-red-950 hover:text-red-300 text-red-400 font-bold text-xs py-2 px-3 rounded-xl border border-neutral-700 hidden">
+                Disconnect
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Optional Collapsible: Webhook & Advanced -->
+        <details class="group border border-neutral-800 rounded-xl bg-neutral-950/40 overflow-hidden">
+          <summary class="p-3 font-bold text-xs text-neutral-400 cursor-pointer select-none flex items-center justify-between hover:text-white transition-colors">
+            <span class="flex items-center gap-2">
+              <i data-lucide="sliders" class="w-3.5 h-3.5 text-yellow-400"></i> Advanced: Universal Webhook & API Keys (Optional)
+            </span>
+            <span class="text-[10px] text-neutral-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="p-3.5 border-t border-neutral-800 space-y-3">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase">Universal Webhook (Make / Zapier / Blotato)</label>
+                <label class="text-[10px] text-neutral-400 flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" id="cfgWhEnabled" class="rounded text-yellow-400"> Enable
+                </label>
+              </div>
+              <input type="text" id="cfgWhUrl" placeholder="https://hook.us1.make.com/xxx or https://hooks.zapier.com/..." class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-yellow-400">
+            </div>
+
+            <div class="pt-2 flex justify-end">
+              <button id="saveSocialSettingsBtn" class="bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-[11px] py-1.5 px-4 rounded-lg shadow">
+                Save Webhook Settings
+              </button>
+            </div>
+          </div>
+        </details>
+
+      </div>
+
+      <div class="p-4 border-t border-neutral-800 bg-neutral-950/60 flex items-center justify-between">
+        <div id="cfgSaveNotice" class="text-xs text-emerald-400 font-bold hidden">✓ Settings saved successfully!</div>
+        <button id="cancelSocialSettingsBtn" class="text-neutral-400 hover:text-white font-semibold text-xs py-2 px-4 rounded-xl border border-neutral-800 bg-neutral-900 ml-auto">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multi-Platform Viral Copy & Hashtags Hub Modal -->
+  <div id="viralCopyModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="max-w-4xl w-full bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/80">
+        <div>
+          <h3 class="text-base font-extrabold flex items-center gap-2 text-white">
+            <span class="text-amber-400 text-lg">🔥</span> Multi-Platform Viral Copy & Hashtags Center
+          </h3>
+          <p class="text-xs text-neutral-400">2026 Algorithmic High-Retention Hooks, Captions & Tested Hashtags ready to copy in 1-click.</p>
+        </div>
+        <button id="closeViralCopyModal" class="text-neutral-500 hover:text-white p-1 rounded-lg text-sm">✕</button>
+      </div>
+
+      <!-- Clip Header Summary Banner -->
+      <div class="px-6 py-3 bg-neutral-950/60 border-b border-neutral-800/80 flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <img id="vcClipThumb" src="" class="w-10 h-14 object-cover rounded-lg border border-neutral-800 bg-neutral-900 shrink-0" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
+          <div class="min-w-0">
+            <div id="vcClipTitle" class="text-xs font-bold text-white truncate max-w-md">Clip Title</div>
+            <div class="text-[11px] text-neutral-400 flex items-center gap-2 mt-0.5 flex-wrap">
+              <span id="vcClipId" class="font-mono text-cyan-400">clip_id</span>
+              <span>•</span>
+              <span class="flex items-center gap-2 flex-wrap">
+                <span class="text-red-400 font-mono text-[11px]">🔴 YT: <strong id="vcYtHandle">@clipstack_A1</strong></span>
+                <span class="text-neutral-600">|</span>
+                <span class="text-pink-400 font-mono text-[11px]">📸 IG: <strong id="vcIgHandle">@clip_stacka1</strong></span>
+                <span class="text-neutral-600">|</span>
+                <span class="text-cyan-400 font-mono text-[11px]">🐦 X: <strong id="vcXHandle">@clipstack_A1</strong></span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="vcRegenBtn" type="button" class="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Regenerate Copy
+          </button>
+          <button id="vcDeleteClipBtn" type="button" class="text-xs bg-red-950/60 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 hover:border-red-500 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95" title="Permanently delete this clip from device and website">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400 hover:text-white"></i> Delete Clip
+          </button>
+        </div>
+      </div>
+
+      <!-- Direct Local File Paths Strip for 1-Click Uploading -->
+      <div class="px-6 py-2.5 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between gap-3 text-xs flex-wrap">
+        <div class="flex items-center gap-2 text-[11px] text-neutral-400 font-bold uppercase tracking-wider shrink-0">
+          <i data-lucide="folder-check" class="w-3.5 h-3.5 text-cyan-400"></i> Local Files for Upload:
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button type="button" id="vcModalCopyVidPathBtn" class="bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/30 text-[11px] font-mono font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-sm" title="Copy absolute Windows path of this clip video MP4">
+            <i data-lucide="copy" class="w-3 h-3 text-cyan-400"></i> 📋 Copy Video Path
+          </button>
+          <button type="button" id="vcModalCopyThumbPathBtn" class="bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-500/30 text-[11px] font-mono font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-sm" title="Copy absolute Windows path of this thumbnail image">
+            <i data-lucide="copy" class="w-3 h-3 text-amber-400"></i> 📋 Copy Thumb Path
+          </button>
+          <button type="button" id="vcModalCopyFolderBtn" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 text-[11px] font-mono font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95" title="Copy directory path of exports folder">
+            <i data-lucide="folder" class="w-3 h-3 text-neutral-400"></i> 📋 Copy Folder Path
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (YouTube Shorts | Instagram Reels | X (Twitter) | TikTok) -->
+      <div class="flex border-b border-neutral-800 bg-neutral-950/40 px-6 gap-2 pt-2">
+        <button type="button" class="vc-tab-btn active px-4 py-2.5 text-xs font-bold border-b-2 border-red-500 text-red-400 flex items-center gap-2 transition-all" data-tab="yt">
+          <span class="w-2 h-2 rounded-full bg-red-500"></span> 🔴 YouTube Shorts
+        </button>
+        <button type="button" class="vc-tab-btn px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-neutral-400 hover:text-pink-400 flex items-center gap-2 transition-all" data-tab="ig">
+          <span class="w-2 h-2 rounded-full bg-pink-500"></span> 📸 Instagram Reels
+        </button>
+        <button type="button" class="vc-tab-btn px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-neutral-400 hover:text-cyan-400 flex items-center gap-2 transition-all" data-tab="x">
+          <span class="w-2 h-2 rounded-full bg-cyan-400"></span> 🐦 X (Twitter)
+        </button>
+        <button type="button" class="vc-tab-btn px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-neutral-400 hover:text-emerald-400 flex items-center gap-2 transition-all" data-tab="tt">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 🎵 TikTok
+        </button>
+      </div>
+
+      <!-- Tab Contents Container -->
+      <div class="p-6 overflow-y-auto space-y-5 custom-scrollbar text-xs">
+        
+        <!-- Tab 1: YouTube Shorts -->
+        <div id="vcTabContentYt" class="vc-tab-panel space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="youtube" class="w-4 h-4"></i> YouTube Shorts Formula (2026 High CTR & Retention)
+            </div>
+            <button class="copy-field-btn text-xs bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 px-3 py-1 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcYtAll">
+              <i data-lucide="copy" class="w-3 h-3"></i> 📋 Copy Full YouTube Package
+            </button>
+          </div>
+
+          <!-- Title Box -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-neutral-400 uppercase">Title (&lt; 100 chars, High Curiosity Gap)</label>
+              <button class="copy-field-btn text-[11px] text-red-400 hover:text-red-300 font-bold flex items-center gap-1" data-target="vcYtTitle">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Title
+              </button>
+            </div>
+            <input type="text" id="vcYtTitle" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500" readonly />
+          </div>
+
+          <!-- Description Box -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-neutral-400 uppercase">Description (Hook + Comment Magnet + Channel CTA)</label>
+              <button class="copy-field-btn text-[11px] text-red-400 hover:text-red-300 font-bold flex items-center gap-1" data-target="vcYtDesc">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Description
+              </button>
+            </div>
+            <textarea id="vcYtDesc" rows="4" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-red-500 custom-scrollbar" readonly></textarea>
+          </div>
+
+          <!-- Hashtags Box -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-neutral-400 uppercase">Algorithmic Hashtags (2026 Sweet Spot: 3-5 Tags)</label>
+              <button class="copy-field-btn text-[11px] text-red-400 hover:text-red-300 font-bold flex items-center gap-1" data-target="vcYtTags">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Hashtags
+              </button>
+            </div>
+            <input type="text" id="vcYtTags" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-red-300 font-mono focus:outline-none focus:border-red-500" readonly />
+            <div id="vcYtTagsPills" class="flex gap-1.5 pt-1 flex-wrap"></div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Instagram Reels -->
+        <div id="vcTabContentIg" class="vc-tab-panel space-y-4 hidden">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-bold text-pink-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="instagram" class="w-4 h-4"></i> Instagram Reels Formula (DM Shares & SEO Indexing)
+            </div>
+            <button class="copy-field-btn text-xs bg-pink-500/15 hover:bg-pink-500/25 text-pink-300 border border-pink-500/30 px-3 py-1 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcIgAll">
+              <i data-lucide="copy" class="w-3 h-3"></i> 📋 Copy Full Reels Caption + Tags
+            </button>
+          </div>
+
+          <!-- Reels Caption & Storytelling -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-neutral-400 uppercase">Full Caption (Scroll Stopper + Context + DM Share Trigger)</label>
+              <button class="copy-field-btn text-[11px] text-pink-400 hover:text-pink-300 font-bold flex items-center gap-1" data-target="vcIgCaption">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Caption
+              </button>
+            </div>
+            <textarea id="vcIgCaption" rows="6" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-pink-500 custom-scrollbar" readonly></textarea>
+          </div>
+
+          <!-- Niche SEO Hashtags -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-neutral-400 uppercase">Explore Page & Niche Hashtags (3-5 Targeted)</label>
+              <button class="copy-field-btn text-[11px] text-pink-400 hover:text-pink-300 font-bold flex items-center gap-1" data-target="vcIgTags">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Hashtags
+              </button>
+            </div>
+            <input type="text" id="vcIgTags" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-pink-300 font-mono focus:outline-none focus:border-pink-500" readonly />
+            <div id="vcIgTagsPills" class="flex gap-1.5 pt-1 flex-wrap"></div>
+          </div>
+        </div>
+
+        <!-- Tab 3: X (Twitter) -->
+        <div id="vcTabContentX" class="vc-tab-panel space-y-4 hidden">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="twitter" class="w-4 h-4"></i> X / Twitter Formula (High Velocity, &lt; 280 chars, Reply-Driver)
+            </div>
+            <button class="copy-field-btn text-xs bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcXPost">
+              <i data-lucide="copy" class="w-3 h-3"></i> 📋 Copy Full Post
+            </button>
+          </div>
+
+          <!-- Post Content -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <label class="text-[11px] font-bold text-neutral-400 uppercase">Post Content</label>
+                <span id="vcXCharCount" class="text-[10px] text-neutral-500 font-mono">180 / 280 chars</span>
+              </div>
+              <button class="copy-field-btn text-[11px] text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1" data-target="vcXPost">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Post
+              </button>
+            </div>
+            <textarea id="vcXPost" rows="5" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-cyan-400 custom-scrollbar" readonly></textarea>
+          </div>
+
+          <!-- Hashtags -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-neutral-400 uppercase">Trending Hashtags (1-3 High-Impact)</label>
+              <button class="copy-field-btn text-[11px] text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1" data-target="vcXTags">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Hashtags
+              </button>
+            </div>
+            <input type="text" id="vcXTags" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-400" readonly />
+            <div id="vcXTagsPills" class="flex gap-1.5 pt-1 flex-wrap"></div>
+          </div>
+        </div>
+
+        <!-- Tab 4: TikTok -->
+        <div id="vcTabContentTt" class="vc-tab-panel space-y-4 hidden">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="music" class="w-4 h-4"></i> TikTok Formula (FYP Retention & Trend Tags)
+            </div>
+            <button class="copy-field-btn text-xs bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcTtCaption">
+              <i data-lucide="copy" class="w-3 h-3"></i> 📋 Copy Full TikTok Caption
+            </button>
+          </div>
+
+          <!-- TikTok Caption -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-neutral-400 uppercase">TikTok Caption & Sound Hook</label>
+              <button class="copy-field-btn text-[11px] text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1" data-target="vcTtCaption">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Caption
+              </button>
+            </div>
+            <textarea id="vcTtCaption" rows="3" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-400 custom-scrollbar" readonly></textarea>
+          </div>
+
+          <!-- TikTok Tags -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-neutral-400 uppercase">FYP Algorithmic Tags</label>
+              <button class="copy-field-btn text-[11px] text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1" data-target="vcTtTags">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Hashtags
+              </button>
+            </div>
+            <input type="text" id="vcTtTags" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-400" readonly />
+            <div id="vcTtTagsPills" class="flex gap-1.5 pt-1 flex-wrap"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer with Direct Action Buttons -->
+      <div class="p-4 border-t border-neutral-800 bg-neutral-950/80 flex items-center justify-between flex-wrap gap-2">
+        <div id="copyNotification" class="text-xs font-bold text-emerald-400 flex items-center gap-1.5 opacity-0 transition-opacity">
+          <i data-lucide="check-circle" class="w-4 h-4"></i> Copied to clipboard! Ready to paste into platform.
+        </div>
+        <div class="flex items-center gap-2 ml-auto">
+          <button id="closeViralCopyModalBtn" type="button" class="text-xs text-neutral-400 hover:text-white px-4 py-2 rounded-xl border border-neutral-800 bg-neutral-900">
+            Close
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Publish History Modal -->
+  <div id="publishHistoryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="max-w-3xl w-full bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div class="p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
+        <div>
+          <h3 class="text-base font-extrabold flex items-center gap-2 text-white">
+            <span class="text-yellow-400 text-lg">📋</span> Automated Publishing History
+          </h3>
+          <p class="text-xs text-neutral-400">Audit logs of all social broadcasts, scheduled drops, and webhook dispatches.</p>
+        </div>
+        <button id="closePublishHistoryModal" class="text-neutral-500 hover:text-white p-1 rounded-lg text-sm">✕</button>
+      </div>
+
+      <div id="historyListContainer" class="p-5 overflow-y-auto space-y-3 custom-scrollbar text-xs">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Frontend Logic -->
+  <script>
+    // State
+    const state = {
+      targetDuration: 60,
+      clipCount: 3,
+      aspectRatio: '9:16',
+      captionTheme: 'hormozi',
+      uploadedFile: null
+    };
+
+    lucide.createIcons();
+
+    // Duration Picker Event
+    document.querySelectorAll('.dur-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.dur-btn').forEach(b => {
+          b.className = 'dur-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all';
+          b.querySelector('div:first-child').className = 'text-base font-black text-neutral-200';
+        });
+        btn.className = 'dur-btn p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-yellow-300 text-center transition-all';
+        btn.querySelector('div:first-child').className = 'text-base font-black';
+        state.targetDuration = parseInt(btn.dataset.val);
+      });
+    });
+
+    // Count Picker Event
+    document.querySelectorAll('.count-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.count-btn').forEach(b => {
+          b.className = 'count-btn py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700';
+        });
+        btn.className = 'count-btn py-2.5 rounded-xl border border-white bg-white text-black text-xs font-bold';
+        state.clipCount = parseInt(btn.dataset.count);
+        document.getElementById('clipCountLabel').innerText = `${state.clipCount} Clips Selected`;
+      });
+    });
+
+    // Aspect Ratio Picker
+    document.querySelectorAll('.aspect-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.aspect-btn').forEach(b => {
+          b.className = 'aspect-btn py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-400 text-xs font-semibold hover:border-neutral-700';
+        });
+        btn.className = 'aspect-btn py-2 rounded-xl border border-blue-500 bg-blue-500/10 text-blue-400 text-xs font-bold';
+        state.aspectRatio = btn.dataset.aspect;
+      });
+    });
+
+    // Theme Picker
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.theme-btn').forEach(b => {
+          b.className = 'theme-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700';
+          b.querySelector('div:first-child').className = 'text-xs font-bold text-neutral-200';
+        });
+        btn.className = 'theme-btn p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-left transition-all';
+        btn.querySelector('div:first-child').className = 'text-xs font-bold text-yellow-300';
+        state.captionTheme = btn.dataset.theme;
+      });
+    });
+
+    // Local file input
+    document.getElementById('localFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('fileLabel').innerText = `Uploading: ${file.name}...`;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        state.uploadedFile = data.file_path;
+        document.getElementById('fileLabel').innerText = `Uploaded: ${file.name}`;
+      } catch (err) {
+        document.getElementById('fileLabel').innerText = `Upload failed`;
+      }
+    });
+
+    // Logging helper
+    const logBox = document.getElementById('logBox');
+    function appendLog(msg, color = 'text-neutral-300') {
+      const line = document.createElement('div');
+      line.className = color;
+      line.innerText = `> ${msg}`;
+      logBox.appendChild(line);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // WebSocket connection for real-time progress
+    let ws;
+    function connectWS() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${window.location.host}/ws/progress`);
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.message) {
+          appendLog(data.message);
+          document.getElementById('statusLabel').innerText = data.message;
+          document.getElementById('progressBar').style.width = `${data.percent || 0}%`;
+          document.getElementById('percentLabel').innerText = `${data.percent || 0}%`;
+        }
+        if (data.type === 'complete') {
+          appendLog('Session complete! Fetching updated clips...', 'text-emerald-400 font-bold');
+          loadClips();
+          document.getElementById('generateBtn').disabled = false;
+        }
+        if (data.type === 'error') {
+          appendLog(`Error: ${data.error}`, 'text-red-400 font-bold');
+          document.getElementById('generateBtn').disabled = false;
+        }
+      };
+      ws.onclose = () => setTimeout(connectWS, 2000);
+    }
+    connectWS();
+
+    // Generate Button Action
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const ytUrl = document.getElementById('youtubeUrl').value.trim();
+      if (!ytUrl && !state.uploadedFile) {
+        alert('Please enter a YouTube URL or upload a local video file.');
+        return;
+      }
+
+      const payload = {
+        youtube_url: ytUrl || null,
+        local_file: state.uploadedFile || null,
+        target_duration: state.targetDuration,
+        clip_count: state.clipCount,
+        aspect_ratio: state.aspectRatio,
+        caption_theme: state.captionTheme,
+        watermark: document.getElementById('watermark').value.trim(),
+        floating_watermark: document.getElementById('floatingWmToggle').checked,
+        ai_thumbnail: document.getElementById('aiThumbToggle').checked,
+        header_title: document.getElementById('headerTitle').value.trim() || null,
+        enable_vignette: document.getElementById('vignetteToggle').checked,
+        enable_grain: document.getElementById('grainToggle').checked
+      };
+
+      document.getElementById('generateBtn').disabled = true;
+      appendLog(`Starting session for ${state.clipCount} clips of ${state.targetDuration}s...`, 'text-yellow-400 font-semibold');
+
+      try {
+        const res = await fetch('/api/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const resp = await res.json();
+        if (resp.status !== 'started') {
+          appendLog(`Failed: ${resp.detail || 'Could not start'}`, 'text-red-400');
+          document.getElementById('generateBtn').disabled = false;
+        }
+      } catch (err) {
+        appendLog(`Network error: ${err.message}`, 'text-red-400');
+        document.getElementById('generateBtn').disabled = false;
+      }
+    });
+
+    // Load Clips Library
+    async function loadClips() {
+      try {
+        const res = await fetch('/api/clips');
+        const data = await res.json();
+        const grid = document.getElementById('clipsGrid');
+        grid.innerHTML = '';
+
+        if (!data.clips || data.clips.length === 0) {
+          grid.innerHTML = `<div class="col-span-full text-center py-10 text-neutral-600 text-xs">No clips generated yet. Paste a link above to get started!</div>`;
+          return;
+        }
+
+        data.clips.forEach(clip => {
+          const card = document.createElement('div');
+          card.className = 'bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-lg group hover:border-neutral-700 transition-all flex flex-col';
+          card.innerHTML = `
+            <div class="relative aspect-[9/16] bg-black overflow-hidden cursor-pointer preview-trigger" data-url="${clip.video_url}">
+              <img src="${clip.thumb_url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
+              <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="w-12 h-12 rounded-full bg-white/90 text-black flex items-center justify-center shadow-lg font-bold">▶</div>
+              </div>
+              <!-- Delete Clip Button (Top-Left) -->
+              <button type="button" class="delete-clip-trigger absolute top-2.5 left-2.5 bg-neutral-950/85 hover:bg-red-600 text-neutral-400 hover:text-white p-2 rounded-xl border border-neutral-700/80 hover:border-red-500 backdrop-blur-md transition-all z-20 shadow-xl active:scale-90" data-id="${clip.id}" title="Permanently delete video, thumbnail and files from device and website">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+              <span class="absolute top-2.5 right-2.5 bg-black/75 backdrop-blur-md text-[10px] text-yellow-400 font-bold px-2 py-0.5 rounded-md border border-yellow-400/30">
+                🔥 ${clip.neural_score || 80}% BRAIN
+              </span>
+              <span class="absolute bottom-2.5 left-2.5 bg-black/75 text-[10px] text-white font-mono px-2 py-0.5 rounded-md">
+                ${Math.round(clip.duration)}s
+              </span>
+            </div>
+            <div class="p-3.5 flex-1 flex flex-col justify-between">
+              <div class="text-xs font-bold text-neutral-200 line-clamp-2 mb-2">${clip.title}</div>
+              <div class="space-y-2 pt-2 border-t border-neutral-800/80">
+                <!-- Action Row 1: Direct Downloads (Video MP4 & 8K Thumb) -->
+                <div class="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
+                  <a href="${clip.video_url}" download="${clip.id}.mp4" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center" title="Download vertical video MP4">
+                    <i data-lucide="download" class="w-3 h-3 text-yellow-400"></i> Video
+                  </a>
+                  <a href="${clip.thumb_url}" download="${clip.id}_thumb.jpg" class="bg-neutral-800 hover:bg-neutral-700 text-yellow-400 hover:text-yellow-300 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-bold transition-all text-center shadow-sm" title="Download 8K high-quality thumbnail image">
+                    <i data-lucide="image" class="w-3 h-3"></i> Thumb
+                  </a>
+                </div>
+
+                <!-- Action Row 2: 1-Click Copy Local Paths (Video Path & Thumb Path for Direct Uploads) -->
+                <div class="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
+                  <button type="button" class="copy-vid-path-btn bg-cyan-950/50 hover:bg-cyan-900/80 text-cyan-300 hover:text-cyan-100 border border-cyan-500/30 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center active:scale-95" data-path="${clip.video_path || ''}" data-id="${clip.id}" title="Click to copy exact Windows Video file path for upload">
+                    <i data-lucide="copy" class="w-2.5 h-2.5 text-cyan-400 shrink-0"></i> <span class="truncate">Video Path</span>
+                  </button>
+                  <button type="button" class="copy-thumb-path-btn bg-amber-950/50 hover:bg-amber-900/80 text-amber-300 hover:text-amber-100 border border-amber-500/30 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center active:scale-95" data-path="${clip.thumb_path || ''}" data-id="${clip.id}" title="Click to copy exact Windows Thumbnail file path for upload">
+                    <i data-lucide="copy" class="w-2.5 h-2.5 text-amber-400 shrink-0"></i> <span class="truncate">Thumb Path</span>
+                  </button>
+                </div>
+
+                <div class="flex items-center justify-between text-[11px] text-neutral-500 pt-0.5">
+                  <span>${clip.aspect_ratio} • ${Math.round(clip.duration)}s</span>
+                  <button class="rebrand-trigger text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 text-[10px] font-bold" data-id="${clip.id}" title="Re-apply latest brand logo to thumbnail">
+                    <i data-lucide="sparkles" class="w-2.5 h-2.5"></i> Apply Logo
+                  </button>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <button type="button" class="viral-copy-trigger bg-neutral-800 hover:bg-neutral-700 text-amber-300 hover:text-amber-200 border border-amber-400/30 py-2 px-2 rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs transition-all shadow-sm active:scale-95" title="Copy YouTube, Instagram & X viral hooks & hashtags">
+                    <i data-lucide="copy" class="w-3.5 h-3.5 text-amber-400"></i> Viral Copy
+                  </button>
+                  <button type="button" class="publish-trigger bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black font-extrabold text-xs py-2 px-2 rounded-xl flex items-center justify-center gap-1.5 shadow transition-all active:scale-95" title="Direct 1-Click Social Publisher">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i> 🚀 Publish
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          const copyVidBtn = card.querySelector('.copy-vid-path-btn');
+          if (copyVidBtn) {
+            copyVidBtn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              let p = copyVidBtn.dataset.path;
+              if (!p) {
+                const res = await fetchClipPath(clip.id);
+                p = res.video_path;
+              }
+              await copyPathToClipboard(p, copyVidBtn, 'Video Path');
+            });
+          }
+
+          const copyThumbBtn = card.querySelector('.copy-thumb-path-btn');
+          if (copyThumbBtn) {
+            copyThumbBtn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              let p = copyThumbBtn.dataset.path;
+              if (!p) {
+                const res = await fetchClipPath(clip.id);
+                p = res.thumb_path;
+              }
+              await copyPathToClipboard(p, copyThumbBtn, 'Thumb Path');
+            });
+          }
+
+          const rebrandBtn = card.querySelector('.rebrand-trigger');
+          if (rebrandBtn) {
+            rebrandBtn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              rebrandBtn.innerHTML = '<i data-lucide="loader" class="w-2.5 h-2.5 animate-spin"></i>';
+              try {
+                await fetch(`/api/branding/rebrand-clip/${clip.id}`, { method: 'POST' });
+                appendLog(`Applied brand logo to ${clip.id} thumbnail.`, 'text-cyan-400 font-bold');
+                loadClips();
+              } catch (err) {
+                alert('Failed: ' + err.message);
+              }
+            });
+          }
+
+          const viralCopyBtn = card.querySelector('.viral-copy-trigger');
+          if (viralCopyBtn) {
+            viralCopyBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openViralCopyModal(clip);
+            });
+          }
+
+          const deleteClipBtn = card.querySelector('.delete-clip-trigger');
+          if (deleteClipBtn) {
+            deleteClipBtn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              await promptDeleteClip(clip.id, clip.title);
+            });
+          }
+
+          card.querySelector('.preview-trigger').addEventListener('click', () => {
+            currentPlayerClip = clip;
+            const playerBox = document.getElementById('playerBox');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const downloadBtn = document.getElementById('downloadBtn');
+            videoPlayer.src = clip.video_url;
+            downloadBtn.href = clip.video_url;
+            playerBox.classList.remove('hidden');
+            videoPlayer.play();
+            playerBox.scrollIntoView({ behavior: 'smooth' });
+          });
+
+          card.querySelector('.publish-trigger').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openPublishModal(clip);
+          });
+
+          grid.appendChild(card);
+        });
+
+        lucide.createIcons();
+      } catch (err) {
+        console.error("Failed to load clips", err);
+      }
+    }
+
+    let currentPlayerClip = null;
+    document.getElementById('closePlayer').addEventListener('click', () => {
+      const videoPlayer = document.getElementById('videoPlayer');
+      videoPlayer.pause();
+      document.getElementById('playerBox').classList.add('hidden');
+    });
+
+    const playerCopyPathBtn = document.getElementById('playerCopyPathBtn');
+    if (playerCopyPathBtn) {
+      playerCopyPathBtn.addEventListener('click', async () => {
+        if (!currentPlayerClip) return;
+        let p = currentPlayerClip.video_path;
+        if (!p) {
+          const res = await fetchClipPath(currentPlayerClip.id);
+          p = res.video_path;
+        }
+        await copyPathToClipboard(p, playerCopyPathBtn, 'Video Path');
+      });
+    }
+
+    const playerDeleteClipBtn = document.getElementById('playerDeleteClipBtn');
+    if (playerDeleteClipBtn) {
+      playerDeleteClipBtn.addEventListener('click', async () => {
+        if (!currentPlayerClip) return;
+        await promptDeleteClip(currentPlayerClip.id, currentPlayerClip.title);
+      });
+    }
+
+    async function promptDeleteClip(clipId, title) {
+      const clipTitle = title || clipId;
+      const confirmed = window.confirm(
+        `⚠️ PERMANENTLY DELETE CLIP?\n\n` +
+        `Title: "${clipTitle}"\n\n` +
+        `This will permanently delete the video file (.mp4), thumbnail (.jpg), and metadata from your local storage drive and completely remove it from the website.\n\n` +
+        `Click OK to permanently delete now.`
+      );
+      if (!confirmed) return;
+
+      try {
+        appendLog(`Deleting clip ${clipId} from device storage...`, 'text-red-400');
+        const res = await fetch(`/api/clips/${clipId}`, { method: 'DELETE' });
+        const data = await res.json();
+        
+        if (res.ok && data.status === 'success') {
+          appendLog(`Permanently deleted ${clipId} (${data.deleted_files.length} local files unlinked).`, 'text-red-400 font-bold');
+          showCopyFeedback(`Clip "${clipId}" deleted permanently.`);
+
+          if (currentPlayerClip && currentPlayerClip.id === clipId) {
+            const videoPlayer = document.getElementById('videoPlayer');
+            if (videoPlayer) {
+              videoPlayer.pause();
+              videoPlayer.src = '';
+            }
+            document.getElementById('playerBox').classList.add('hidden');
+            currentPlayerClip = null;
+          }
+
+          await loadClips();
+        } else {
+          alert(`Failed to delete clip: ${data.detail || 'Unknown server error'}`);
+          appendLog(`Failed to delete ${clipId}: ${data.detail || 'Unknown error'}`, 'text-red-500 font-bold');
+        }
+      } catch (err) {
+        alert(`Delete request failed: ${err.message}`);
+        appendLog(`Error deleting clip: ${err.message}`, 'text-red-500');
+      }
+    }
+
+    document.getElementById('refreshLibrary').addEventListener('click', loadClips);
+    const copyExportsFolderBtn = document.getElementById('copyExportsFolderBtn');
+    if (copyExportsFolderBtn) {
+      copyExportsFolderBtn.addEventListener('click', async () => {
+        try {
+          const res = await fetch('/api/locate-folder');
+          const data = await res.json();
+          await copyPathToClipboard(data.folder_path, copyExportsFolderBtn, 'Exports Folder Path');
+        } catch (err) {
+          alert('Could not copy folder path: ' + err.message);
+        }
+      });
+    }
+    loadClips();
+
+    async function copyPathToClipboard(text, btnElement, label = 'Path') {
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (err) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+
+      if (btnElement) {
+        const origHtml = btnElement.innerHTML;
+        btnElement.innerHTML = `<span class="text-emerald-400 font-bold">✓ Copied!</span>`;
+        btnElement.classList.add('border-emerald-500');
+        setTimeout(() => {
+          btnElement.innerHTML = origHtml;
+          btnElement.classList.remove('border-emerald-500');
+          lucide.createIcons();
+        }, 2000);
+      }
+
+      showCopyFeedback(`Copied ${label} to clipboard: "${text}"`);
+      appendLog(`Copied ${label}: ${text}`, 'text-cyan-400 font-mono');
+    }
+
+    async function fetchClipPath(clipId) {
+      try {
+        const res = await fetch(`/api/locate/${clipId}`);
+        return await res.json();
+      } catch (e) {
+        return { video_path: '', thumb_path: '', folder_path: '' };
+      }
+    }
+
+    // ==========================================
+    // Multi-Platform Viral Copy & Hashtags Hub Logic
+    // ==========================================
+    let currentViralCopyClip = null;
+    let currentViralData = null;
+
+    const viralCopyModal = document.getElementById('viralCopyModal');
+    const closeViralCopyModal = document.getElementById('closeViralCopyModal');
+    const closeViralCopyModalBtn = document.getElementById('closeViralCopyModalBtn');
+    const vcRegenBtn = document.getElementById('vcRegenBtn');
+    const copyNotification = document.getElementById('copyNotification');
+
+    function hideViralCopyModal() {
+      if (viralCopyModal) viralCopyModal.classList.add('hidden');
+    }
+    if (closeViralCopyModal) closeViralCopyModal.addEventListener('click', hideViralCopyModal);
+    if (closeViralCopyModalBtn) closeViralCopyModalBtn.addEventListener('click', hideViralCopyModal);
+
+    const vcModalCopyVidPathBtn = document.getElementById('vcModalCopyVidPathBtn');
+    if (vcModalCopyVidPathBtn) {
+      vcModalCopyVidPathBtn.addEventListener('click', async () => {
+        if (!currentViralCopyClip) return;
+        let p = currentViralCopyClip.video_path;
+        if (!p) {
+          const res = await fetchClipPath(currentViralCopyClip.id);
+          p = res.video_path;
+        }
+        await copyPathToClipboard(p, vcModalCopyVidPathBtn, 'Video Path');
+      });
+    }
+
+    const vcModalCopyThumbPathBtn = document.getElementById('vcModalCopyThumbPathBtn');
+    if (vcModalCopyThumbPathBtn) {
+      vcModalCopyThumbPathBtn.addEventListener('click', async () => {
+        if (!currentViralCopyClip) return;
+        let p = currentViralCopyClip.thumb_path;
+        if (!p) {
+          const res = await fetchClipPath(currentViralCopyClip.id);
+          p = res.thumb_path;
+        }
+        await copyPathToClipboard(p, vcModalCopyThumbPathBtn, 'Thumbnail Path');
+      });
+    }
+
+    const vcModalCopyFolderBtn = document.getElementById('vcModalCopyFolderBtn');
+    if (vcModalCopyFolderBtn) {
+      vcModalCopyFolderBtn.addEventListener('click', async () => {
+        if (!currentViralCopyClip) return;
+        let p = currentViralCopyClip.folder_path;
+        if (!p) {
+          const res = await fetch('/api/locate-folder');
+          const data = await res.json();
+          p = data.folder_path;
+        }
+        await copyPathToClipboard(p, vcModalCopyFolderBtn, 'Exports Folder Path');
+      });
+    }
+
+    const vcDeleteClipBtn = document.getElementById('vcDeleteClipBtn');
+    if (vcDeleteClipBtn) {
+      vcDeleteClipBtn.addEventListener('click', async () => {
+        if (!currentViralCopyClip) return;
+        const clipId = currentViralCopyClip.id;
+        const clipTitle = currentViralCopyClip.title;
+        hideViralCopyModal();
+        await promptDeleteClip(clipId, clipTitle);
+      });
+    }
+
+    // Tab Switcher for YouTube, Instagram, X (Twitter), TikTok
+    document.querySelectorAll('.vc-tab-btn').forEach(tabBtn => {
+      tabBtn.addEventListener('click', () => {
+        const tab = tabBtn.dataset.tab;
+        document.querySelectorAll('.vc-tab-btn').forEach(b => {
+          b.className = 'vc-tab-btn px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-neutral-400 hover:text-white flex items-center gap-2 transition-all';
+        });
+        
+        let activeBorder = 'border-red-500 text-red-400';
+        if (tab === 'ig') activeBorder = 'border-pink-500 text-pink-400';
+        else if (tab === 'x') activeBorder = 'border-cyan-400 text-cyan-300';
+        else if (tab === 'tt') activeBorder = 'border-emerald-400 text-emerald-300';
+        
+        tabBtn.className = `vc-tab-btn active px-4 py-2.5 text-xs font-bold border-b-2 ${activeBorder} flex items-center gap-2 transition-all`;
+
+        document.querySelectorAll('.vc-tab-panel').forEach(p => p.classList.add('hidden'));
+        if (tab === 'yt') document.getElementById('vcTabContentYt').classList.remove('hidden');
+        else if (tab === 'ig') document.getElementById('vcTabContentIg').classList.remove('hidden');
+        else if (tab === 'x') document.getElementById('vcTabContentX').classList.remove('hidden');
+        else if (tab === 'tt') document.getElementById('vcTabContentTt').classList.remove('hidden');
+      });
+    });
+
+    // Copy Notification Toast
+    function showCopyFeedback(msg = "Copied to clipboard! Ready to paste into platform.") {
+      if (!copyNotification) return;
+      copyNotification.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> ${msg}`;
+      copyNotification.classList.remove('opacity-0');
+      lucide.createIcons();
+      setTimeout(() => {
+        copyNotification.classList.add('opacity-0');
+      }, 3000);
+    }
+
+    // Generic 1-Click Field Copy Handlers
+    document.querySelectorAll('.copy-field-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const targetId = btn.dataset.target;
+        let textToCopy = '';
+
+        if (targetId === 'vcYtAll') {
+          const t = document.getElementById('vcYtTitle').value;
+          const d = document.getElementById('vcYtDesc').value;
+          textToCopy = `${t}\n\n${d}`;
+        } else if (targetId === 'vcIgAll') {
+          textToCopy = document.getElementById('vcIgCaption').value;
+        } else {
+          const el = document.getElementById(targetId);
+          if (el) textToCopy = el.value || el.innerText;
+        }
+
+        if (!textToCopy) return;
+
+        try {
+          await navigator.clipboard.writeText(textToCopy);
+          const origHtml = btn.innerHTML;
+          btn.innerHTML = `<span class="text-emerald-400 font-bold">✓ Copied!</span>`;
+          showCopyFeedback();
+          setTimeout(() => {
+            btn.innerHTML = origHtml;
+            lucide.createIcons();
+          }, 2000);
+        } catch (err) {
+          const ta = document.createElement('textarea');
+          ta.value = textToCopy;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showCopyFeedback();
+        }
+      });
+    });
+
+    function renderTagPills(containerId, tags, badgeColorClass) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      (tags || []).forEach(tag => {
+        const pill = document.createElement('span');
+        pill.className = `cursor-pointer text-[10px] font-mono px-2 py-0.5 rounded-full border transition-all hover:scale-105 active:scale-95 ${badgeColorClass}`;
+        pill.innerText = tag;
+        pill.title = 'Click to copy single hashtag';
+        pill.addEventListener('click', async () => {
+          await navigator.clipboard.writeText(tag);
+          showCopyFeedback(`Copied "${tag}"!`);
+        });
+        container.appendChild(pill);
+      });
+    }
+
+    async function openViralCopyModal(clip) {
+      currentViralCopyClip = clip;
+      document.getElementById('vcClipThumb').src = clip.thumb_url;
+      document.getElementById('vcClipTitle').innerText = clip.title;
+      document.getElementById('vcClipId').innerText = clip.id;
+      
+      viralCopyModal.classList.remove('hidden');
+      lucide.createIcons();
+
+      await loadViralCopyData(clip.id, clip.title);
+    }
+
+    async function loadViralCopyData(clipId, title) {
+      if (vcRegenBtn) {
+        vcRegenBtn.disabled = true;
+        vcRegenBtn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Researching...`;
+      }
+      try {
+        const res = await fetch('/api/social/generate-copy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clip_id: clipId, title: title })
+        });
+        const data = await res.json();
+        currentViralData = data;
+
+        const ytH = data.youtube_handle || (data.youtube && data.youtube.handle) || '@clipstack_A1';
+        const igH = data.instagram_handle || (data.instagram && data.instagram.handle) || '@clip_stacka1';
+        const xH = data.twitter_handle || (data.twitter && data.twitter.handle) || '@clipstack_A1';
+
+        if (document.getElementById('vcYtHandle')) document.getElementById('vcYtHandle').innerText = ytH;
+        if (document.getElementById('vcIgHandle')) document.getElementById('vcIgHandle').innerText = igH;
+        if (document.getElementById('vcXHandle')) document.getElementById('vcXHandle').innerText = xH;
+
+        // 1. YouTube Shorts
+        if (data.youtube) {
+          document.getElementById('vcYtTitle').value = data.youtube.title || '';
+          document.getElementById('vcYtDesc').value = data.youtube.description || '';
+          document.getElementById('vcYtTags').value = data.youtube.hashtags_str || '';
+          renderTagPills('vcYtTagsPills', data.youtube.hashtags, 'bg-red-500/10 text-red-300 border-red-500/30 hover:bg-red-500/20');
+        }
+
+        // 2. Instagram Reels
+        if (data.instagram) {
+          document.getElementById('vcIgCaption').value = data.instagram.caption || '';
+          document.getElementById('vcIgTags').value = data.instagram.hashtags_str || '';
+          renderTagPills('vcIgTagsPills', data.instagram.hashtags, 'bg-pink-500/10 text-pink-300 border-pink-500/30 hover:bg-pink-500/20');
+        }
+
+        // 3. X / Twitter
+        if (data.twitter) {
+          const postText = data.twitter.post_text || '';
+          document.getElementById('vcXPost').value = postText;
+          document.getElementById('vcXTags').value = data.twitter.hashtags_str || '';
+          document.getElementById('vcXCharCount').innerText = `${postText.length} / 280 chars`;
+          renderTagPills('vcXTagsPills', data.twitter.hashtags, 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/20');
+        }
+
+        // 4. TikTok
+        if (data.tiktok) {
+          document.getElementById('vcTtCaption').value = data.tiktok.caption || '';
+          document.getElementById('vcTtTags').value = data.tiktok.hashtags_str || '';
+          renderTagPills('vcTtTagsPills', data.tiktok.hashtags, 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20');
+        }
+
+      } catch (err) {
+        console.error('Failed to generate viral copy:', err);
+      } finally {
+        if (vcRegenBtn) {
+          vcRegenBtn.disabled = false;
+          vcRegenBtn.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Regenerate Copy`;
+        }
+        lucide.createIcons();
+      }
+    }
+
+    if (vcRegenBtn) {
+      vcRegenBtn.addEventListener('click', () => {
+        if (!currentViralCopyClip) return;
+        loadViralCopyData(currentViralCopyClip.id, currentViralCopyClip.title);
+      });
+    }
+
+    // ==========================================
+    // 1-Click Social Publishing Engine Logic
+    // ==========================================
+    let currentPublishClip = null;
+
+    function openPublishModal(clip) {
+      currentPublishClip = clip;
+      document.getElementById('pubClipThumb').src = clip.thumb_url;
+      document.getElementById('pubClipTitle').innerText = clip.title;
+      document.getElementById('pubClipId').innerText = clip.clip_id;
+      document.getElementById('pubClipDuration').innerText = `${Math.round(clip.duration)}s`;
+      document.getElementById('pubTitle').value = clip.title;
+      document.getElementById('pubStatusBanner').classList.add('hidden');
+
+      const btn = document.getElementById('confirmPublishBtn');
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i> Launch & Publish`;
+
+      // Auto generate initial viral copy
+      fetchViralCopy(clip.clip_id, clip.title);
+
+      document.getElementById('publishModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    async function fetchViralCopy(clipId, title) {
+      try {
+        const copyBtn = document.getElementById('pubGenerateCopyBtn');
+        copyBtn.disabled = true;
+        copyBtn.innerHTML = `Generating...`;
+        const res = await fetch('/api/social/generate-copy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clip_id: clipId, title: title })
+        });
+        const data = await res.json();
+        if (data.youtube && data.youtube.title) {
+          document.getElementById('pubTitle').value = data.youtube.title;
+        }
+        if (data.instagram && data.instagram.caption) {
+          document.getElementById('pubCaption').value = data.instagram.caption;
+        }
+        if (data.default_hashtags) {
+          document.getElementById('pubHashtags').value = data.default_hashtags.join(' ');
+        }
+      } catch (e) {
+        console.error("Viral copy generation error:", e);
+      } finally {
+        const copyBtn = document.getElementById('pubGenerateCopyBtn');
+        copyBtn.disabled = false;
+        copyBtn.innerHTML = `<i data-lucide="sparkles" class="w-3 h-3"></i> Auto-Generate Viral Copy`;
+        lucide.createIcons();
+      }
+    }
+
+    document.getElementById('pubGenerateCopyBtn').addEventListener('click', () => {
+      if (!currentPublishClip) return;
+      fetchViralCopy(currentPublishClip.clip_id, document.getElementById('pubTitle').value.trim());
+    });
+
+    const hidePublishModal = () => document.getElementById('publishModal').classList.add('hidden');
+    document.getElementById('closePublishModal').addEventListener('click', hidePublishModal);
+    document.getElementById('cancelPublishBtn').addEventListener('click', hidePublishModal);
+
+    document.getElementById('confirmPublishBtn').addEventListener('click', async () => {
+      if (!currentPublishClip) return;
+      const btn = document.getElementById('confirmPublishBtn');
+      btn.disabled = true;
+      btn.innerHTML = `Dispatching...`;
+
+      const platforms = [];
+      if (document.getElementById('pubYt').checked) platforms.push('youtube');
+      if (document.getElementById('pubIg').checked) platforms.push('instagram');
+      if (document.getElementById('pubTt').checked) platforms.push('tiktok');
+      if (document.getElementById('pubWh').checked) platforms.push('webhook');
+
+      if (platforms.length === 0) {
+        alert('Please select at least one target platform!');
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i> Launch & Publish`;
+        lucide.createIcons();
+        return;
+      }
+
+      const hashtagsStr = document.getElementById('pubHashtags').value.trim();
+      const hashtags = hashtagsStr ? hashtagsStr.split(/\s+/).map(t => t.startsWith('#') ? t : '#' + t) : [];
+
+      const payload = {
+        clip_id: currentPublishClip.clip_id,
+        platforms: platforms,
+        title: document.getElementById('pubTitle').value.trim(),
+        caption: document.getElementById('pubCaption').value.trim(),
+        hashtags: hashtags,
+        privacy: document.getElementById('pubPrivacy').value,
+        schedule_time: document.getElementById('pubSchedule').value === 'instant' ? null : document.getElementById('pubSchedule').value
+      };
+
+      try {
+        const res = await fetch('/api/social/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> Dispatched!`;
+
+        const banner = document.getElementById('pubStatusBanner');
+        const msg = document.getElementById('pubStatusMsg');
+        const list = document.getElementById('pubResultsList');
+        banner.classList.remove('hidden');
+        list.innerHTML = '';
+
+        if (data.status === 'success' || data.status === 'scheduled') {
+          msg.className = 'font-bold text-xs text-emerald-400 flex items-center gap-1.5';
+          msg.innerHTML = `<span>✓</span> Published Successfully across ${platforms.length} platform(s)`;
+          appendLog(`Broadcast ${currentPublishClip.clip_id} to ${platforms.join(', ')}`, 'text-emerald-400 font-bold');
+        } else {
+          msg.className = 'font-bold text-xs text-amber-400';
+          msg.innerHTML = `Status: ${data.status}`;
+        }
+
+        if (data.results) {
+          for (const [platform, item] of Object.entries(data.results)) {
+            const row = document.createElement('div');
+            row.className = 'p-2 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-between text-[11px]';
+            const isLive = item.mode === 'LIVE';
+            const badgeColor = isLive ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+            const modeLabel = isLive ? 'LIVE' : 'SIMULATION';
+            const link = item.url ? `<a href="${item.url}" target="_blank" class="text-yellow-400 hover:underline font-bold text-[10px] ml-2">Open ↗</a>` : '';
+
+            row.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="font-bold uppercase text-neutral-200">${platform}</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded border ${badgeColor} font-mono">${modeLabel}</span>
+              </div>
+              <div class="flex items-center">
+                <span class="text-neutral-400 text-[10px] truncate max-w-[200px]">${item.message || 'Dispatched'}</span>
+                ${link}
+              </div>
+            `;
+            list.appendChild(row);
+          }
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Error`;
+        alert('Dispatch error: ' + err.message);
+      }
+      lucide.createIcons();
+    });
+
+    // ==========================================
+    // Platform Connect Settings Modal Logic
+    // ==========================================
+    const socialSettingsModal = document.getElementById('socialSettingsModal');
+    let statusPollInterval = null;
+
+    const hideSocialSettings = () => {
+      socialSettingsModal.classList.add('hidden');
+      if (statusPollInterval) clearInterval(statusPollInterval);
+    };
+    document.getElementById('closeSocialSettingsModal').addEventListener('click', hideSocialSettings);
+    document.getElementById('cancelSocialSettingsBtn').addEventListener('click', hideSocialSettings);
+
+    async function refreshBrowserStatus() {
+      try {
+        const res = await fetch('/api/social/browser-status');
+        const data = await res.json();
+
+        // Update YouTube
+        const yt = data.youtube || {};
+        const ytBadge = document.getElementById('ytBadge');
+        const ytConnectBtn = document.getElementById('ytConnectBtn');
+        const ytDisconnectBtn = document.getElementById('ytDisconnectBtn');
+        const ytDesc = document.getElementById('ytDesc');
+
+        if (yt.connected) {
+          ytBadge.className = 'text-[9px] px-2 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+          ytBadge.innerText = 'CONNECTED';
+          ytDesc.innerText = `Connected as ${yt.account_name || 'YouTube Creator'}`;
+          ytConnectBtn.classList.add('hidden');
+          ytDisconnectBtn.classList.remove('hidden');
+        } else if (yt.connecting) {
+          ytBadge.className = 'text-[9px] px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse';
+          ytBadge.innerText = 'WAITING FOR 2FA LOGIN...';
+          ytDesc.innerText = 'Login window open on your screen. Please enter credentials & complete 2FA.';
+          ytConnectBtn.classList.remove('hidden');
+          ytConnectBtn.disabled = true;
+          ytConnectBtn.innerHTML = `<span>⏳</span> Window Open...`;
+          ytDisconnectBtn.classList.add('hidden');
+        } else {
+          ytBadge.className = 'text-[9px] px-2 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400 border border-neutral-700';
+          ytBadge.innerText = 'NOT CONNECTED';
+          ytDesc.innerText = yt.message || 'Google Sign-In with 2FA support';
+          ytConnectBtn.classList.remove('hidden');
+          ytConnectBtn.disabled = false;
+          ytConnectBtn.innerHTML = `<i data-lucide="log-in" class="w-3.5 h-3.5"></i> Connect Google`;
+          ytDisconnectBtn.classList.add('hidden');
+        }
+
+        // Update Instagram
+        const ig = data.instagram || {};
+        const igBadge = document.getElementById('igBadge');
+        const igConnectBtn = document.getElementById('igConnectBtn');
+        const igDisconnectBtn = document.getElementById('igDisconnectBtn');
+        const igDesc = document.getElementById('igDesc');
+
+        if (ig.connected) {
+          igBadge.className = 'text-[9px] px-2 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+          igBadge.innerText = 'CONNECTED';
+          igDesc.innerText = `Connected as ${ig.account_name || 'Instagram Profile'}`;
+          igConnectBtn.classList.add('hidden');
+          igDisconnectBtn.classList.remove('hidden');
+        } else if (ig.connecting) {
+          igBadge.className = 'text-[9px] px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse';
+          igBadge.innerText = 'WAITING FOR LOGIN...';
+          igDesc.innerText = 'Login window open on your screen. Please enter credentials & complete 2FA.';
+          igConnectBtn.classList.remove('hidden');
+          igConnectBtn.disabled = true;
+          igConnectBtn.innerHTML = `<span>⏳</span> Window Open...`;
+          igDisconnectBtn.classList.add('hidden');
+        } else {
+          igBadge.className = 'text-[9px] px-2 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400 border border-neutral-700';
+          igBadge.innerText = 'NOT CONNECTED';
+          igDesc.innerText = ig.message || 'Direct Instagram login with 2FA support';
+          igConnectBtn.classList.remove('hidden');
+          igConnectBtn.disabled = false;
+          igConnectBtn.innerHTML = `<i data-lucide="log-in" class="w-3.5 h-3.5"></i> Connect Instagram`;
+          igDisconnectBtn.classList.add('hidden');
+        }
+
+        // Update TikTok
+        const tt = data.tiktok || {};
+        const ttBadge = document.getElementById('ttBadge');
+        const ttConnectBtn = document.getElementById('ttConnectBtn');
+        const ttDisconnectBtn = document.getElementById('ttDisconnectBtn');
+        const ttDesc = document.getElementById('ttDesc');
+
+        if (tt.connected) {
+          ttBadge.className = 'text-[9px] px-2 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+          ttBadge.innerText = 'CONNECTED';
+          ttDesc.innerText = `Connected as ${tt.account_name || 'TikTok Account'}`;
+          ttConnectBtn.classList.add('hidden');
+          ttDisconnectBtn.classList.remove('hidden');
+        } else if (tt.connecting) {
+          ttBadge.className = 'text-[9px] px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse';
+          ttBadge.innerText = 'WAITING FOR LOGIN...';
+          ttDesc.innerText = 'Login window open on your screen. Please enter credentials & complete 2FA.';
+          ttConnectBtn.classList.remove('hidden');
+          ttConnectBtn.disabled = true;
+          ttConnectBtn.innerHTML = `<span>⏳</span> Window Open...`;
+          ttDisconnectBtn.classList.add('hidden');
+        } else {
+          ttBadge.className = 'text-[9px] px-2 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400 border border-neutral-700';
+          ttBadge.innerText = 'NOT CONNECTED';
+          ttDesc.innerText = tt.message || 'Link TikTok via password or QR scan';
+          ttConnectBtn.classList.remove('hidden');
+          ttConnectBtn.disabled = false;
+          ttConnectBtn.innerHTML = `<i data-lucide="log-in" class="w-3.5 h-3.5"></i> Connect TikTok`;
+          ttDisconnectBtn.classList.add('hidden');
+        }
+
+        lucide.createIcons();
+      } catch (err) {
+        console.error("Status refresh error:", err);
+      }
+    }
+
+    function openConnectPopup(platform) {
+      const width = 520;
+      const height = 660;
+      const left = Math.round((window.screen.width - width) / 2);
+      const top = Math.round((window.screen.height - height) / 2);
+
+      const url = `/connect/${platform}`;
+      const popup = window.open(
+        url,
+        `Connect_${platform}`,
+        `width=${width},height=${height},top=${top},left=${left},status=yes,scrollbars=yes,resizable=yes`
+      );
+
+      // If browser blocked popup, fallback to new tab
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        window.open(url, '_blank');
+      }
+
+      appendLog(`Opened ${platform.toUpperCase()} connect window. Authorize in the window.`, 'text-yellow-400 font-bold');
+
+      // Poll status while popup is open
+      if (statusPollInterval) clearInterval(statusPollInterval);
+      statusPollInterval = setInterval(async () => {
+        await refreshBrowserStatus();
+        if (popup && popup.closed) {
+          clearInterval(statusPollInterval);
+        }
+      }, 1000);
+    }
+
+    // Listen for instant callback from the popup window
+    window.addEventListener('message', async (event) => {
+      if (event.data && event.data.type === 'SOCIAL_CONNECTED') {
+        appendLog(`✓ Linked ${event.data.platform.toUpperCase()} account: ${event.data.account}`, 'text-emerald-400 font-bold');
+        await refreshBrowserStatus();
+      }
+    });
+
+    async function triggerDisconnect(platform) {
+      try {
+        await fetch('/api/social/disconnect-browser', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ platform })
+        });
+        appendLog(`Disconnected ${platform.toUpperCase()} profile.`, 'text-neutral-400');
+        await refreshBrowserStatus();
+      } catch (err) {
+        alert('Failed to disconnect: ' + err.message);
+      }
+    }
+
+    document.getElementById('ytConnectBtn').addEventListener('click', () => openConnectPopup('youtube'));
+    document.getElementById('ytDisconnectBtn').addEventListener('click', () => triggerDisconnect('youtube'));
+
+    document.getElementById('igConnectBtn').addEventListener('click', () => openConnectPopup('instagram'));
+    document.getElementById('igDisconnectBtn').addEventListener('click', () => triggerDisconnect('instagram'));
+
+    document.getElementById('ttConnectBtn').addEventListener('click', () => openConnectPopup('tiktok'));
+    document.getElementById('ttDisconnectBtn').addEventListener('click', () => triggerDisconnect('tiktok'));
+
+    document.getElementById('openSocialSettingsBtn').addEventListener('click', async () => {
+      try {
+        await refreshBrowserStatus();
+        const res = await fetch('/api/social/config');
+        const cfg = await res.json();
+        document.getElementById('cfgWhEnabled').checked = cfg.webhook?.enabled || false;
+        document.getElementById('cfgWhUrl').value = cfg.webhook?.url || '';
+
+        socialSettingsModal.classList.remove('hidden');
+      } catch (err) {
+        alert('Failed to load social config: ' + err.message);
+      }
+    });
+
+    document.getElementById('saveSocialSettingsBtn').addEventListener('click', async () => {
+      const config = {
+        webhook: {
+          enabled: document.getElementById('cfgWhEnabled').checked,
+          url: document.getElementById('cfgWhUrl').value.trim(),
+          secret: ''
+        }
+      };
+
+      try {
+        const res = await fetch('/api/social/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ config })
+        });
+        if (res.ok) {
+          const notice = document.getElementById('cfgSaveNotice');
+          notice.classList.remove('hidden');
+          setTimeout(() => notice.classList.add('hidden'), 3000);
+        }
+      } catch (err) {
+        alert('Failed to save settings: ' + err.message);
+      }
+    });
+
+    // ==========================================
+    // Publish History Modal Logic
+    // ==========================================
+    const publishHistoryModal = document.getElementById('publishHistoryModal');
+    document.getElementById('closePublishHistoryModal').addEventListener('click', () => {
+      publishHistoryModal.classList.add('hidden');
+    });
+
+    document.getElementById('openPublishHistoryBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/social/history');
+        const data = await res.json();
+        const container = document.getElementById('historyListContainer');
+        container.innerHTML = '';
+
+        if (!data.history || data.history.length === 0) {
+          container.innerHTML = `<div class="text-center py-10 text-neutral-500">No publish history recorded yet. Dispatch a clip using "1-Click Publish"!</div>`;
+        } else {
+          data.history.forEach(rec => {
+            const dateStr = new Date(rec.timestamp * 1000).toLocaleString();
+            const card = document.createElement('div');
+            card.className = 'p-3.5 bg-neutral-950 border border-neutral-800 rounded-xl space-y-2';
+
+            let platformPills = '';
+            for (const [p, res] of Object.entries(rec.results || {})) {
+              const isLive = res.mode === 'LIVE';
+              const pColor = isLive ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+              const link = res.url ? `<a href="${res.url}" target="_blank" class="underline text-yellow-400 font-bold ml-1">↗</a>` : '';
+              platformPills += `
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border ${pColor}">
+                  ${p.toUpperCase()}: ${res.status || 'OK'} ${link}
+                </span>
+              `;
+            }
+
+            card.innerHTML = `
+              <div class="flex items-center justify-between">
+                <div class="font-bold text-white text-xs truncate max-w-[350px]">${rec.title || rec.clip_id}</div>
+                <div class="text-[10px] text-neutral-500 font-mono">${dateStr}</div>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[10px] text-neutral-400 font-mono">${rec.clip_id}</span>
+                <span>•</span>
+                ${platformPills}
+              </div>
+            `;
+            container.appendChild(card);
+          });
+        }
+
+        publishHistoryModal.classList.remove('hidden');
+      } catch (err) {
+        alert('Failed to load history: ' + err.message);
+      }
+    });
+
+    // ==========================================
+    // Channel Profile & Brand Kit Client Logic
+    // ==========================================
+    const brandHandleInput = document.getElementById('brandChannelHandle');
+    const brandNameInput = document.getElementById('brandChannelName');
+    const brandYtHandle = document.getElementById('brandYtHandle');
+    const brandIgHandle = document.getElementById('brandIgHandle');
+    const brandXHandle = document.getElementById('brandXHandle');
+    const brandEmbedToggle = document.getElementById('brandEmbedToggle');
+    const brandHandleBadge = document.getElementById('brandHandleBadge');
+    const brandLogoImg = document.getElementById('brandLogoImg');
+    const brandLogoUpload = document.getElementById('brandLogoUpload');
+    const saveBrandingBtn = document.getElementById('saveBrandingBtn');
+    const brandLogoPosition = document.getElementById('brandLogoPosition');
+    const brandLogoSize = document.getElementById('brandLogoSize');
+
+    async function loadBrandingProfile() {
+      try {
+        const res = await fetch('/api/branding');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.channel_handle) {
+          brandHandleInput.value = data.channel_handle;
+          brandHandleBadge.innerText = data.channel_handle;
+          if (watermarkInput) watermarkInput.value = data.channel_handle;
+        }
+        if (data.channel_name) {
+          brandNameInput.value = data.channel_name;
+        }
+        if (data.youtube_handle && brandYtHandle) {
+          brandYtHandle.value = data.youtube_handle;
+        }
+        if (data.instagram_handle && brandIgHandle) {
+          brandIgHandle.value = data.instagram_handle;
+        }
+        if (data.twitter_handle && brandXHandle) {
+          brandXHandle.value = data.twitter_handle;
+        }
+        if (data.logo_position && brandLogoPosition) {
+          brandLogoPosition.value = data.logo_position;
+        }
+        if (data.logo_size && brandLogoSize) {
+          brandLogoSize.value = data.logo_size;
+        }
+        if (typeof data.embed_logo_on_thumbnail === 'boolean') {
+          brandEmbedToggle.checked = data.embed_logo_on_thumbnail;
+        }
+        if (data.logo_url) {
+          brandLogoImg.src = `${data.logo_url}?t=${Date.now()}`;
+        }
+      } catch (err) {
+        console.warn('Could not load branding profile:', err);
+      }
+    }
+
+    // Synchronize watermark field whenever user edits handle
+    brandHandleInput.addEventListener('input', () => {
+      const val = brandHandleInput.value.trim();
+      brandHandleBadge.innerText = val || '@clipstack_A1';
+      if (watermarkInput) watermarkInput.value = val || '@clipstack_A1';
+    });
+
+    // Save profile changes
+    saveBrandingBtn.addEventListener('click', async () => {
+      saveBrandingBtn.disabled = true;
+      saveBrandingBtn.innerHTML = '<i data-lucide="loader" class="w-3 h-3 animate-spin"></i> Saving...';
+      try {
+        const res = await fetch('/api/branding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channel_handle: brandHandleInput.value.trim(),
+            channel_name: brandNameInput.value.trim(),
+            youtube_handle: brandYtHandle ? brandYtHandle.value.trim() : '@clipstack_A1',
+            instagram_handle: brandIgHandle ? brandIgHandle.value.trim() : '@clip_stacka1',
+            twitter_handle: brandXHandle ? brandXHandle.value.trim() : '@clipstack_A1',
+            embed_logo_on_thumbnail: brandEmbedToggle.checked,
+            logo_position: brandLogoPosition ? brandLogoPosition.value : 'bottom_right',
+            logo_size: brandLogoSize ? parseInt(brandLogoSize.value) : 125,
+            watermark_text: brandHandleInput.value.trim()
+          })
+        });
+        const data = await res.json();
+        saveBrandingBtn.innerHTML = '<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i> Saved!';
+        appendLog(`Channel profile updated: YT(${brandYtHandle.value}) | IG(${brandIgHandle.value}) | X(${brandXHandle.value})`, 'text-cyan-400 font-bold');
+        setTimeout(() => {
+          saveBrandingBtn.disabled = false;
+          saveBrandingBtn.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Save Profile';
+          lucide.createIcons();
+        }, 2000);
+      } catch (err) {
+        alert('Failed to save branding profile: ' + err.message);
+        saveBrandingBtn.disabled = false;
+        saveBrandingBtn.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Save Profile';
+        lucide.createIcons();
+      }
+    });
+
+    // Handle interactive logo file upload
+    brandLogoUpload.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      appendLog(`Uploading new brand logo: ${file.name}...`, 'text-cyan-400 font-semibold');
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('/api/branding/logo', {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        brandLogoImg.src = `${data.logo_url}&t=${Date.now()}`;
+        appendLog('Brand logo uploaded & active! Thumbnails will now use this logo.', 'text-emerald-400 font-bold');
+        loadClips();
+      } catch (err) {
+        alert('Logo upload failed: ' + err.message);
+      }
+    });
+
+    // Initialize branding profile on page load
+    loadBrandingProfile();
+  </script>
+</body>
+</html>

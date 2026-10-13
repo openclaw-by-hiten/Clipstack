@@ -1,0 +1,49 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Model & HuggingFace / Whisper Cache
+cache/
+
+# Processed Video Exports (Large Media Files)
+exports/*
+!exports/.gitkeep
+
+# Temporary Video/Audio Processing Files
+workspace/*.mp4
+workspace/*.wav
+workspace/*.webm
+workspace/*.part
+workspace/*.ass
+workspace/*.mkv
+workspace/*.avi
+workspace/upload_*
+workspace/temp_*
+workspace/test_*
+workspace/source_*
+workspace/thumb_*
+workspace/publish_history.json
+
+# Browser Session Profiles & Cookies
+workspace/browser_profiles/
+workspace/test_launch/
+workspace/test_profile/
+
+# Temporary Scratch Scripts & Output
+scratch/
+scratch_*
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
