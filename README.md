@@ -1,6 +1,13 @@
 # ⚡ ClipStack — Neural AI Viral Clipper
 
-ClipStack is a 100% local, high-performance AI video clipping studio powered by **Faster-Whisper** and **Meta TRIBE v2 Neural Brain-Attention Scoring**. It transforms long-form videos (YouTube URLs or local files) into viral, high-retention vertical shorts, reels, and TikToks with automated animated subtitles, anti-AI perimeter floating watermarks, 8K AI thumbnail generation, and multi-platform viral copy & publishing.
+[![GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-yellow?style=for-the-badge&logo=github)](https://openclaw-by-hiten.github.io/Clipstack/)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-emerald?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
+
+ClipStack is a high-performance AI video clipping studio powered by **Faster-Whisper** and **Meta TRIBE v2 Neural Brain-Attention Scoring**. It transforms long-form videos (YouTube URLs or local files) into viral, high-retention vertical shorts, reels, and TikToks with automated animated subtitles, anti-AI perimeter floating watermarks, 8K AI thumbnail generation, and multi-platform viral copy & publishing.
+
+🌐 **Live Web Studio:** [https://openclaw-by-hiten.github.io/Clipstack/](https://openclaw-by-hiten.github.io/Clipstack/)
 
 ---
 
@@ -38,10 +45,28 @@ ClipStack is a 100% local, high-performance AI video clipping studio powered by 
 
 ---
 
+## 🌐 Enabling GitHub Pages (Live on the Web)
+
+The repository includes a pre-configured GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) and root `index.html`.
+
+To activate the live site on GitHub:
+1. Open your repository on GitHub: [https://github.com/openclaw-by-hiten/Clipstack](https://github.com/openclaw-by-hiten/Clipstack)
+2. Go to **Settings** ➔ **Pages** (in the left sidebar).
+3. Under **Build and deployment** > **Source**:
+   * Select **GitHub Actions** (recommended), or select **Deploy from a branch** ➔ `main` / `root`.
+4. Your live site will immediately be published at:
+   👉 **`https://openclaw-by-hiten.github.io/Clipstack/`**
+
+> **Note**: The live GitHub Pages interface includes interactive sample clips, working 8K thumbnail previews, live viral copy generation, and a brand kit. To process custom live videos with Whisper and FFmpeg, run the local backend or connect a remote API URL via the top-right **Backend** button.
+
+---
+
 ## 📁 Project Architecture
 
 ```
 ClipStack/
+├── .github/workflows/
+│   └── deploy-pages.yml        # Automatic GitHub Pages deployment workflow
 ├── core/
 │   ├── audio_ducking.py        # Background music auto-ducking via sidechain compression
 │   ├── branding.py             # Channel identity, logo compositing & placement
@@ -63,6 +88,8 @@ ClipStack/
 │   ├── ai_thumbnails/          # 8K hyper-realistic base templates
 │   └── branding/               # Channel brand configuration & default logo
 ├── exports/                    # Output directory for rendered clips & thumbnails
+├── index.html                  # Root entrypoint for GitHub Pages hosting
+├── Dockerfile                  # Container definition for Cloud deployments (HuggingFace / Render)
 ├── server.py                   # FastAPI application & WebSocket real-time progress hub
 ├── requirements.txt            # Python dependencies
 ├── run_app.bat                 # 1-Click Windows launcher script
@@ -71,14 +98,14 @@ ClipStack/
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Running Locally
 
 ### Prerequisites
-* Windows 10 / 11
+* Windows 10 / 11, macOS, or Linux
 * Python 3.10+
 * [FFmpeg](https://ffmpeg.org/) installed and available in `PATH`
 
-### Installation
+### Quick Start
 
 1. **Clone the repository:**
    ```bash
@@ -99,3 +126,14 @@ ClipStack/
    venv\Scripts\python.exe server.py
    ```
    Open your browser at **http://localhost:8000**.
+
+---
+
+## 🐳 Running with Docker / Cloud Deployment
+
+You can deploy ClipStack as a Docker container to **Hugging Face Spaces**, **Render**, or **Google Cloud Run**:
+
+```bash
+docker build -t clipstack .
+docker run -p 8000:7860 clipstack
+```

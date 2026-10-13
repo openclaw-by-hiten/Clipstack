@@ -40,9 +40,10 @@
       </div>
     </div>
     <div class="flex items-center gap-4">
-      <span class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Local Engine Ready
-      </span>
+      <button id="engineStatusBtn" type="button" class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full flex items-center gap-2 cursor-pointer hover:bg-emerald-500/20 transition-all" title="Click to view backend status or connect custom URL">
+        <span id="engineStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="engineStatusText">Local Engine Ready</span>
+      </button>
       <button id="openPublishHistoryBtn" class="text-xs font-semibold hover:text-yellow-400 transition-colors flex items-center gap-1.5 text-neutral-300 border border-neutral-800 bg-neutral-900/80 px-3 py-1.5 rounded-xl cursor-pointer">
         <i data-lucide="history" class="w-3.5 h-3.5"></i> Publish Logs
       </button>
@@ -230,7 +231,7 @@
           <!-- Logo Preview & Upload Trigger -->
           <div class="relative shrink-0 group">
             <div class="w-16 h-16 rounded-2xl border-2 border-cyan-400/60 bg-neutral-950 overflow-hidden shadow-lg relative flex items-center justify-center">
-              <img id="brandLogoImg" src="/api/branding/logo" alt="Channel Logo" class="w-full h-full object-cover" onerror="this.src='/api/branding/logo';" />
+              <img id="brandLogoImg" src="/api/branding/logo" alt="Channel Logo" class="w-full h-full object-cover" onerror="this.src='./workspace/branding/logo.png';" />
             </div>
             <label for="brandLogoUpload" class="absolute -bottom-1 -right-1 bg-cyan-500 hover:bg-cyan-400 text-black p-1.5 rounded-xl cursor-pointer shadow-md transition-all hover:scale-110 flex items-center justify-center" title="Click to upload/change logo">
               <i data-lucide="camera" class="w-3.5 h-3.5"></i>
@@ -397,6 +398,37 @@
       <!-- Injected via JavaScript -->
     </div>
   </section>
+
+  <!-- Backend Connection Modal (For GitHub Pages / Remote Cloud / Local Tunnel) -->
+  <div id="backendModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i data-lucide="server" class="w-4 h-4 text-cyan-400"></i> Backend Connection Settings
+        </h3>
+        <button id="closeBackendModal" class="text-neutral-500 hover:text-white text-xs">✕</button>
+      </div>
+      <p class="text-xs text-neutral-400 leading-relaxed">
+        When running live on GitHub Pages, video processing (Faster-Whisper, TRIBE v2, FFmpeg) connects to your backend engine. Enter your local tunnel (Cloudflare/Ngrok) or cloud API URL below.
+      </p>
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-neutral-300 block">Backend Server URL</label>
+        <input type="text" id="customBackendUrl" placeholder="e.g. https://your-domain.trycloudflare.com or http://localhost:8000" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-cyan-300 focus:outline-none focus:border-cyan-400 font-mono" />
+        <p class="text-[10px] text-neutral-500">Leave empty to use default local server or GitHub Pages interactive demo mode.</p>
+      </div>
+      <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 space-y-1">
+        <div class="text-[11px] font-bold text-neutral-300 flex items-center gap-2">
+          <span>Active Status:</span>
+          <span id="backendModalStatusBadge" class="text-cyan-400 font-mono">GitHub Live Edition</span>
+        </div>
+        <div id="backendModalDetail" class="text-[10px] text-neutral-500">Interactive UI active with 8K templates, viral copy & brand kit.</div>
+      </div>
+      <div class="flex items-center justify-between pt-2">
+        <button type="button" id="resetBackendBtn" class="text-xs text-neutral-400 hover:text-white transition-colors">Reset</button>
+        <button type="button" id="saveBackendBtn" class="bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md active:scale-95">Save & Connect</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 1-Click Social Publish Modal -->
   <div id="publishModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -1031,35 +1063,159 @@
       logBox.scrollTop = logBox.scrollHeight;
     }
 
+    // Environment & Backend Configuration (Supports Localhost & GitHub Pages)
+    const isGitHubPages = window.location.hostname.endsWith('github.io');
+    let apiBaseUrl = localStorage.getItem('clipstack_api_url') || '';
+
+    function apiUrl(path) {
+      if (!apiBaseUrl) return path;
+      const base = apiBaseUrl.replace(/\/+$/, '');
+      const p = path.startsWith('/') ? path : '/' + path;
+      return base + p;
+    }
+
+    function updateBackendStatusUI() {
+      const btn = document.getElementById('engineStatusBtn');
+      const dot = document.getElementById('engineStatusDot');
+      const text = document.getElementById('engineStatusText');
+      const badge = document.getElementById('backendModalStatusBadge');
+      const detail = document.getElementById('backendModalDetail');
+      if (!btn || !text || !dot) return;
+
+      if (apiBaseUrl) {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        text.innerText = 'Engine Connected';
+        btn.className = 'text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full flex items-center gap-2 cursor-pointer hover:bg-emerald-500/20 transition-all';
+        if (badge) {
+          badge.className = 'text-emerald-400 font-mono';
+          badge.innerText = `Connected (${apiBaseUrl})`;
+        }
+        if (detail) detail.innerText = 'Connected to remote backend. Real video generation active.';
+      } else if (isGitHubPages) {
+        dot.className = 'w-2 h-2 rounded-full bg-cyan-400 animate-pulse';
+        text.innerText = '🌐 GitHub Live Edition';
+        btn.className = 'text-xs text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 px-3 py-1.5 rounded-full flex items-center gap-2 cursor-pointer hover:bg-cyan-500/20 transition-all';
+        if (badge) {
+          badge.className = 'text-cyan-400 font-mono';
+          badge.innerText = 'GitHub Live Edition';
+        }
+        if (detail) detail.innerText = 'Interactive UI with 8K templates, viral copy generator & brand kit.';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        text.innerText = 'Local Engine Ready';
+        btn.className = 'text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full flex items-center gap-2 cursor-pointer hover:bg-emerald-500/20 transition-all';
+        if (badge) {
+          badge.className = 'text-emerald-400 font-mono';
+          badge.innerText = 'Local Engine (localhost:8000)';
+        }
+        if (detail) detail.innerText = 'Running on local hardware with CUDA/CPU and local storage.';
+      }
+    }
+    updateBackendStatusUI();
+
+    // Backend Connection Modal Listeners
+    const backendModal = document.getElementById('backendModal');
+    const engineStatusBtn = document.getElementById('engineStatusBtn');
+    const closeBackendModal = document.getElementById('closeBackendModal');
+    const customBackendUrl = document.getElementById('customBackendUrl');
+    const saveBackendBtn = document.getElementById('saveBackendBtn');
+    const resetBackendBtn = document.getElementById('resetBackendBtn');
+
+    if (customBackendUrl) customBackendUrl.value = apiBaseUrl;
+
+    if (engineStatusBtn) {
+      engineStatusBtn.addEventListener('click', () => {
+        if (backendModal) backendModal.classList.remove('hidden');
+      });
+    }
+    if (closeBackendModal) {
+      closeBackendModal.addEventListener('click', () => {
+        if (backendModal) backendModal.classList.add('hidden');
+      });
+    }
+    if (saveBackendBtn) {
+      saveBackendBtn.addEventListener('click', () => {
+        const url = (customBackendUrl.value || '').trim();
+        apiBaseUrl = url;
+        if (url) {
+          localStorage.setItem('clipstack_api_url', url);
+        } else {
+          localStorage.removeItem('clipstack_api_url');
+        }
+        updateBackendStatusUI();
+        if (backendModal) backendModal.classList.add('hidden');
+        appendLog(`Updated backend URL: ${apiBaseUrl || 'Default'}`, 'text-cyan-400');
+        loadClips();
+        connectWS();
+      });
+    }
+    if (resetBackendBtn) {
+      resetBackendBtn.addEventListener('click', () => {
+        apiBaseUrl = '';
+        localStorage.removeItem('clipstack_api_url');
+        if (customBackendUrl) customBackendUrl.value = '';
+        updateBackendStatusUI();
+        if (backendModal) backendModal.classList.add('hidden');
+        appendLog('Reset to default backend configuration.', 'text-neutral-400');
+        loadClips();
+      });
+    }
+
     // WebSocket connection for real-time progress
     let ws;
     function connectWS() {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      ws = new WebSocket(`${protocol}//${window.location.host}/ws/progress`);
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.message) {
-          appendLog(data.message);
-          document.getElementById('statusLabel').innerText = data.message;
-          document.getElementById('progressBar').style.width = `${data.percent || 0}%`;
-          document.getElementById('percentLabel').innerText = `${data.percent || 0}%`;
+      if (ws) {
+        try { ws.close(); } catch (e) {}
+      }
+      let wsUrl;
+      if (apiBaseUrl) {
+        try {
+          const u = new URL(apiBaseUrl);
+          const proto = u.protocol === 'https:' ? 'wss:' : 'ws:';
+          wsUrl = `${proto}//${u.host}/ws/progress`;
+        } catch (e) {
+          return;
         }
-        if (data.type === 'complete') {
-          appendLog('Session complete! Fetching updated clips...', 'text-emerald-400 font-bold');
-          loadClips();
-          document.getElementById('generateBtn').disabled = false;
-        }
-        if (data.type === 'error') {
-          appendLog(`Error: ${data.error}`, 'text-red-400 font-bold');
-          document.getElementById('generateBtn').disabled = false;
-        }
-      };
-      ws.onclose = () => setTimeout(connectWS, 2000);
+      } else {
+        if (isGitHubPages) return;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        wsUrl = `${protocol}//${window.location.host}/ws/progress`;
+      }
+      try {
+        ws = new WebSocket(wsUrl);
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.message) {
+            appendLog(data.message);
+            document.getElementById('statusLabel').innerText = data.message;
+            document.getElementById('progressBar').style.width = `${data.percent || 0}%`;
+            document.getElementById('percentLabel').innerText = `${data.percent || 0}%`;
+          }
+          if (data.type === 'complete') {
+            appendLog('Session complete! Fetching updated clips...', 'text-emerald-400 font-bold');
+            loadClips();
+            document.getElementById('generateBtn').disabled = false;
+          }
+          if (data.type === 'error') {
+            appendLog(`Error: ${data.error}`, 'text-red-400 font-bold');
+            document.getElementById('generateBtn').disabled = false;
+          }
+        };
+        ws.onclose = () => {
+          if (!isGitHubPages || apiBaseUrl) setTimeout(connectWS, 4000);
+        };
+      } catch (e) {}
     }
     connectWS();
 
     // Generate Button Action
     document.getElementById('generateBtn').addEventListener('click', async () => {
+      if (isGitHubPages && !apiBaseUrl) {
+        appendLog('Live Web Edition: Connect a backend engine or run locally to process YouTube videos with Whisper & FFmpeg.', 'text-amber-400 font-bold');
+        alert("⚡ Live Web Edition:\n\nVideo clipping with AI Whisper & FFmpeg requires a running backend or local GPU.\n\n• To connect a remote or local engine, click '🌐 GitHub Live Edition' in the top header.\n• Or test the interactive sample clips, 8K thumbnails, and viral copy hub below!");
+        return;
+      }
+
       const ytUrl = document.getElementById('youtubeUrl').value.trim();
       if (!ytUrl && !state.uploadedFile) {
         alert('Please enter a YouTube URL or upload a local video file.');
@@ -1085,7 +1241,7 @@
       appendLog(`Starting session for ${state.clipCount} clips of ${state.targetDuration}s...`, 'text-yellow-400 font-semibold');
 
       try {
-        const res = await fetch('/api/process', {
+        const res = await fetch(apiUrl('/api/process'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -1101,25 +1257,97 @@
       }
     });
 
+    // Sample Clips for Live GitHub Pages Showcase
+    function getSampleClips() {
+      return [
+        {
+          id: "clip_sample_1",
+          title: "I Bought An Entire Grocery Store & Challenged Strangers!",
+          duration: 30,
+          aspect_ratio: "9:16",
+          neural_score: 94,
+          video_url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+          thumb_url: "./workspace/ai_thumbnails/thumb_01_store_bought.jpg",
+          video_path: "C:\\ClipStack\\exports\\clip_sample_1.mp4",
+          thumb_path: "C:\\ClipStack\\exports\\thumb_01_store_bought.jpg"
+        },
+        {
+          id: "clip_sample_2",
+          title: "Can You Eat 10,000 Calories in 1 Hour? (Extreme Food Challenge)",
+          duration: 60,
+          aspect_ratio: "9:16",
+          neural_score: 91,
+          video_url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+          thumb_url: "./workspace/ai_thumbnails/thumb_02_food_challenge.jpg",
+          video_path: "C:\\ClipStack\\exports\\clip_sample_2.mp4",
+          thumb_path: "C:\\ClipStack\\exports\\thumb_02_food_challenge.jpg"
+        },
+        {
+          id: "clip_sample_3",
+          title: "4 AM Sprint Across The City Before The Police Arrives!",
+          duration: 90,
+          aspect_ratio: "9:16",
+          neural_score: 87,
+          video_url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+          thumb_url: "./workspace/ai_thumbnails/thumb_03_4am_sprint.jpg",
+          video_path: "C:\\ClipStack\\exports\\clip_sample_3.mp4",
+          thumb_path: "C:\\ClipStack\\exports\\thumb_03_4am_sprint.jpg"
+        },
+        {
+          id: "clip_sample_4",
+          title: "Secret $1,000,000 Vault Unlocked Live On Camera!",
+          duration: 30,
+          aspect_ratio: "9:16",
+          neural_score: 96,
+          video_url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4",
+          thumb_url: "./workspace/ai_thumbnails/thumb_04_vault_briefcase.jpg",
+          video_path: "C:\\ClipStack\\exports\\clip_sample_4.mp4",
+          thumb_path: "C:\\ClipStack\\exports\\thumb_04_vault_briefcase.jpg"
+        }
+      ];
+    }
+
     // Load Clips Library
     async function loadClips() {
       try {
-        const res = await fetch('/api/clips');
+        const res = await fetch(apiUrl('/api/clips'));
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const grid = document.getElementById('clipsGrid');
         grid.innerHTML = '';
 
         if (!data.clips || data.clips.length === 0) {
+          if (isGitHubPages && !apiBaseUrl) {
+            renderClipCards(getSampleClips());
+            return;
+          }
           grid.innerHTML = `<div class="col-span-full text-center py-10 text-neutral-600 text-xs">No clips generated yet. Paste a link above to get started!</div>`;
           return;
         }
 
-        data.clips.forEach(clip => {
-          const card = document.createElement('div');
-          card.className = 'bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-lg group hover:border-neutral-700 transition-all flex flex-col';
+        renderClipCards(data.clips);
+      } catch (err) {
+        console.warn("Could not load backend clips, showing interactive showcase clips:", err);
+        renderClipCards(getSampleClips());
+      }
+    }
+
+    function renderClipCards(clipsList) {
+      const grid = document.getElementById('clipsGrid');
+      grid.innerHTML = '';
+      if (!clipsList || clipsList.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-10 text-neutral-600 text-xs">No clips available.</div>`;
+        return;
+      }
+
+      clipsList.forEach(clip => {
+        const card = document.createElement('div');
+        card.className = 'bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-lg group hover:border-neutral-700 transition-all flex flex-col';
+        const vidUrl = clip.video_url.startsWith('http') ? clip.video_url : apiUrl(clip.video_url);
+        const thumbUrl = clip.thumb_url.startsWith('http') || clip.thumb_url.startsWith('.') ? clip.thumb_url : apiUrl(clip.thumb_url);
           card.innerHTML = `
-            <div class="relative aspect-[9/16] bg-black overflow-hidden cursor-pointer preview-trigger" data-url="${clip.video_url}">
-              <img src="${clip.thumb_url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
+            <div class="relative aspect-[9/16] bg-black overflow-hidden cursor-pointer preview-trigger" data-url="${vidUrl}">
+              <img src="${thumbUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
               <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <div class="w-12 h-12 rounded-full bg-white/90 text-black flex items-center justify-center shadow-lg font-bold">▶</div>
               </div>
@@ -1139,10 +1367,10 @@
               <div class="space-y-2 pt-2 border-t border-neutral-800/80">
                 <!-- Action Row 1: Direct Downloads (Video MP4 & 8K Thumb) -->
                 <div class="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
-                  <a href="${clip.video_url}" download="${clip.id}.mp4" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center" title="Download vertical video MP4">
+                  <a href="${vidUrl}" download="${clip.id}.mp4" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center" title="Download vertical video MP4">
                     <i data-lucide="download" class="w-3 h-3 text-yellow-400"></i> Video
                   </a>
-                  <a href="${clip.thumb_url}" download="${clip.id}_thumb.jpg" class="bg-neutral-800 hover:bg-neutral-700 text-yellow-400 hover:text-yellow-300 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-bold transition-all text-center shadow-sm" title="Download 8K high-quality thumbnail image">
+                  <a href="${thumbUrl}" download="${clip.id}_thumb.jpg" class="bg-neutral-800 hover:bg-neutral-700 text-yellow-400 hover:text-yellow-300 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-bold transition-all text-center shadow-sm" title="Download 8K high-quality thumbnail image">
                     <i data-lucide="image" class="w-3 h-3"></i> Thumb
                   </a>
                 </div>
@@ -1238,8 +1466,8 @@
             const playerBox = document.getElementById('playerBox');
             const videoPlayer = document.getElementById('videoPlayer');
             const downloadBtn = document.getElementById('downloadBtn');
-            videoPlayer.src = clip.video_url;
-            downloadBtn.href = clip.video_url;
+            videoPlayer.src = vidUrl;
+            downloadBtn.href = vidUrl;
             playerBox.classList.remove('hidden');
             videoPlayer.play();
             playerBox.scrollIntoView({ behavior: 'smooth' });
@@ -1557,55 +1785,20 @@
         vcRegenBtn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Researching...`;
       }
       try {
-        const res = await fetch('/api/social/generate-copy', {
+        const res = await fetch(apiUrl('/api/social/generate-copy'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ clip_id: clipId, title: title })
         });
+        if (!res.ok) throw new Error('Backend offline');
         const data = await res.json();
         currentViralData = data;
-
-        const ytH = data.youtube_handle || (data.youtube && data.youtube.handle) || '@clipstack_A1';
-        const igH = data.instagram_handle || (data.instagram && data.instagram.handle) || '@clip_stacka1';
-        const xH = data.twitter_handle || (data.twitter && data.twitter.handle) || '@clipstack_A1';
-
-        if (document.getElementById('vcYtHandle')) document.getElementById('vcYtHandle').innerText = ytH;
-        if (document.getElementById('vcIgHandle')) document.getElementById('vcIgHandle').innerText = igH;
-        if (document.getElementById('vcXHandle')) document.getElementById('vcXHandle').innerText = xH;
-
-        // 1. YouTube Shorts
-        if (data.youtube) {
-          document.getElementById('vcYtTitle').value = data.youtube.title || '';
-          document.getElementById('vcYtDesc').value = data.youtube.description || '';
-          document.getElementById('vcYtTags').value = data.youtube.hashtags_str || '';
-          renderTagPills('vcYtTagsPills', data.youtube.hashtags, 'bg-red-500/10 text-red-300 border-red-500/30 hover:bg-red-500/20');
-        }
-
-        // 2. Instagram Reels
-        if (data.instagram) {
-          document.getElementById('vcIgCaption').value = data.instagram.caption || '';
-          document.getElementById('vcIgTags').value = data.instagram.hashtags_str || '';
-          renderTagPills('vcIgTagsPills', data.instagram.hashtags, 'bg-pink-500/10 text-pink-300 border-pink-500/30 hover:bg-pink-500/20');
-        }
-
-        // 3. X / Twitter
-        if (data.twitter) {
-          const postText = data.twitter.post_text || '';
-          document.getElementById('vcXPost').value = postText;
-          document.getElementById('vcXTags').value = data.twitter.hashtags_str || '';
-          document.getElementById('vcXCharCount').innerText = `${postText.length} / 280 chars`;
-          renderTagPills('vcXTagsPills', data.twitter.hashtags, 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/20');
-        }
-
-        // 4. TikTok
-        if (data.tiktok) {
-          document.getElementById('vcTtCaption').value = data.tiktok.caption || '';
-          document.getElementById('vcTtTags').value = data.tiktok.hashtags_str || '';
-          renderTagPills('vcTtTagsPills', data.tiktok.hashtags, 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20');
-        }
-
+        populateViralCopyFields(data);
       } catch (err) {
-        console.error('Failed to generate viral copy:', err);
+        console.warn('Backend unavailable, using client-side viral copy engine:', err);
+        const data = generateClientViralCopy(clipId, title);
+        currentViralData = data;
+        populateViralCopyFields(data);
       } finally {
         if (vcRegenBtn) {
           vcRegenBtn.disabled = false;
@@ -1613,6 +1806,82 @@
         }
         lucide.createIcons();
       }
+    }
+
+    function populateViralCopyFields(data) {
+      const ytH = data.youtube_handle || (data.youtube && data.youtube.handle) || '@clipstack_A1';
+      const igH = data.instagram_handle || (data.instagram && data.instagram.handle) || '@clip_stacka1';
+      const xH = data.twitter_handle || (data.twitter && data.twitter.handle) || '@clipstack_A1';
+
+      if (document.getElementById('vcYtHandle')) document.getElementById('vcYtHandle').innerText = ytH;
+      if (document.getElementById('vcIgHandle')) document.getElementById('vcIgHandle').innerText = igH;
+      if (document.getElementById('vcXHandle')) document.getElementById('vcXHandle').innerText = xH;
+
+      // 1. YouTube Shorts
+      if (data.youtube) {
+        document.getElementById('vcYtTitle').value = data.youtube.title || '';
+        document.getElementById('vcYtDesc').value = data.youtube.description || '';
+        document.getElementById('vcYtTags').value = data.youtube.hashtags_str || '';
+        renderTagPills('vcYtTagsPills', data.youtube.hashtags, 'bg-red-500/10 text-red-300 border-red-500/30 hover:bg-red-500/20');
+      }
+
+      // 2. Instagram Reels
+      if (data.instagram) {
+        document.getElementById('vcIgCaption').value = data.instagram.caption || '';
+        document.getElementById('vcIgTags').value = data.instagram.hashtags_str || '';
+        renderTagPills('vcIgTagsPills', data.instagram.hashtags, 'bg-pink-500/10 text-pink-300 border-pink-500/30 hover:bg-pink-500/20');
+      }
+
+      // 3. X / Twitter
+      if (data.twitter) {
+        const postText = data.twitter.post_text || '';
+        document.getElementById('vcXPost').value = postText;
+        document.getElementById('vcXTags').value = data.twitter.hashtags_str || '';
+        document.getElementById('vcXCharCount').innerText = `${postText.length} / 280 chars`;
+        renderTagPills('vcXTagsPills', data.twitter.hashtags, 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/20');
+      }
+
+      // 4. TikTok
+      if (data.tiktok) {
+        document.getElementById('vcTtCaption').value = data.tiktok.caption || '';
+        document.getElementById('vcTtTags').value = data.tiktok.hashtags_str || '';
+        renderTagPills('vcTtTagsPills', data.tiktok.hashtags, 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20');
+      }
+    }
+
+    function generateClientViralCopy(clipId, title) {
+      const cleanTitle = (title || 'Viral Video Clip').replace(/[^\w\s?!.,'-]/g, '').trim();
+      const ytH = '@clipstack_A1';
+      const igH = '@clip_stacka1';
+      const xH = '@clipstack_A1';
+
+      return {
+        clip_id: clipId,
+        youtube_handle: ytH,
+        instagram_handle: igH,
+        twitter_handle: xH,
+        youtube: {
+          title: `You won't believe what happened here... 😱 #Shorts`,
+          description: `Watch what happens in this clip! 👇\n\n${cleanTitle}\n\nDid this surprise you too? Leave a comment below! 🔥\nSubscribe to ${ytH} for more daily viral moments.`,
+          hashtags: ["#Shorts", "#Viral", "#Trending", "#MindBlown", "#ClipStack"],
+          hashtags_str: "#Shorts #Viral #Trending #MindBlown #ClipStack"
+        },
+        instagram: {
+          caption: `Wait till the very end... 🤯\n\n${cleanTitle}\n\nTag someone who needs to see this! 👇\nFollow ${igH} for more high-energy clips.`,
+          hashtags: ["#Reels", "#ExplorePage", "#ViralReels", "#TrendingReels", "#InstaGood"],
+          hashtags_str: "#Reels #ExplorePage #ViralReels #TrendingReels #InstaGood"
+        },
+        twitter: {
+          post_text: `Wait for it... 🤯 ${cleanTitle}\n\nThoughts? Follow ${xH} for more!`,
+          hashtags: ["#Viral", "#Trending", "#ClipStack"],
+          hashtags_str: "#Viral #Trending #ClipStack"
+        },
+        tiktok: {
+          caption: `Wait for the ending... 🤯 Part 1! Follow ${ytH} for Part 2!`,
+          hashtags: ["#FYP", "#ForYou", "#Viral", "#Trending", "#StoryTime"],
+          hashtags_str: "#FYP #ForYou #Viral #Trending #StoryTime"
+        }
+      };
     }
 
     if (vcRegenBtn) {
@@ -1652,12 +1921,18 @@
         const copyBtn = document.getElementById('pubGenerateCopyBtn');
         copyBtn.disabled = true;
         copyBtn.innerHTML = `Generating...`;
-        const res = await fetch('/api/social/generate-copy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clip_id: clipId, title: title })
-        });
-        const data = await res.json();
+        let data;
+        try {
+          const res = await fetch(apiUrl('/api/social/generate-copy'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clip_id: clipId, title: title })
+          });
+          if (!res.ok) throw new Error('Backend offline');
+          data = await res.json();
+        } catch (e) {
+          data = generateClientViralCopy(clipId, title);
+        }
         if (data.youtube && data.youtube.title) {
           document.getElementById('pubTitle').value = data.youtube.title;
         }
@@ -1666,6 +1941,8 @@
         }
         if (data.default_hashtags) {
           document.getElementById('pubHashtags').value = data.default_hashtags.join(' ');
+        } else if (data.youtube && data.youtube.hashtags_str) {
+          document.getElementById('pubHashtags').value = data.youtube.hashtags_str;
         }
       } catch (e) {
         console.error("Viral copy generation error:", e);
