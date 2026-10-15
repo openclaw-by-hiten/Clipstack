@@ -22,45 +22,57 @@
       background: #27272a;
       border-radius: 9999px;
     }
+    /* Horizontal touch scroll helper */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    button, a, input, select {
+      touch-action: manipulation;
+    }
   </style>
 </head>
 <body class="text-neutral-100 min-h-screen flex flex-col antialiased selection:bg-yellow-400 selection:text-black">
 
-  <!-- Top Navigation Bar -->
-  <header class="border-b border-neutral-800/80 bg-neutral-900/60 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center text-black font-black text-xl shadow-lg shadow-yellow-500/20">
+  <!-- Top Navigation Bar (Mobile Optimized) -->
+  <header class="border-b border-neutral-800/80 bg-neutral-900/80 backdrop-blur-md sticky top-0 z-40 px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex flex-wrap items-center justify-between gap-2.5">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center text-black font-black text-base sm:text-xl shadow-lg shadow-yellow-500/20 shrink-0">
         ⚡
       </div>
       <div>
-        <h1 class="text-lg font-extrabold tracking-tight flex items-center gap-2">
-          Neural Clip Studio <span class="text-[10px] bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 px-2 py-0.5 rounded-full font-bold">TRIBE v2 ENGINE</span>
+        <h1 class="text-sm sm:text-lg font-extrabold tracking-tight flex items-center gap-1.5 sm:gap-2">
+          <span>ClipStack</span>
+          <span class="text-[9px] sm:text-[10px] bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 px-1.5 sm:px-2 py-0.5 rounded-full font-bold">AI STUDIO</span>
         </h1>
-        <p class="text-xs text-neutral-400">100% Local GPU & Neural Brain-Attention Clipper</p>
+        <p class="text-[10px] text-neutral-400 hidden sm:block">Cloud & Local GPU Neural Video Clipper</p>
       </div>
     </div>
-    <div class="flex items-center gap-4">
-      <button id="engineStatusBtn" type="button" class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full flex items-center gap-2 cursor-pointer hover:bg-emerald-500/20 transition-all" title="Click to view backend status or connect custom URL">
-        <span id="engineStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="engineStatusText">Local Engine Ready</span>
+    <div class="flex items-center gap-1.5 sm:gap-2.5 flex-wrap justify-end">
+      <button id="engineStatusBtn" type="button" class="text-[11px] sm:text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full flex items-center gap-1.5 cursor-pointer hover:bg-emerald-500/20 transition-all shrink-0" title="Click to view backend status or connect custom URL">
+        <span id="engineStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+        <span id="engineStatusText" class="truncate max-w-[110px] xs:max-w-none">Local Engine</span>
       </button>
-      <button id="openPublishHistoryBtn" class="text-xs font-semibold hover:text-yellow-400 transition-colors flex items-center gap-1.5 text-neutral-300 border border-neutral-800 bg-neutral-900/80 px-3 py-1.5 rounded-xl cursor-pointer">
-        <i data-lucide="history" class="w-3.5 h-3.5"></i> Publish Logs
+      <button id="openPublishHistoryBtn" class="text-[11px] sm:text-xs font-semibold hover:text-yellow-400 transition-colors flex items-center gap-1 text-neutral-300 border border-neutral-800 bg-neutral-900/80 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl cursor-pointer shrink-0" title="Publish Logs">
+        <i data-lucide="history" class="w-3.5 h-3.5"></i> <span class="hidden md:inline">Logs</span>
       </button>
-      <button id="openSocialSettingsBtn" class="text-xs font-semibold hover:text-yellow-400 transition-colors flex items-center gap-1.5 text-neutral-300 border border-neutral-800 bg-neutral-900/80 px-3 py-1.5 rounded-xl cursor-pointer">
-        <i data-lucide="share-2" class="w-3.5 h-3.5 text-yellow-400"></i> Social Connect
+      <button id="openSocialSettingsBtn" class="text-[11px] sm:text-xs font-semibold hover:text-yellow-400 transition-colors flex items-center gap-1 text-neutral-300 border border-neutral-800 bg-neutral-900/80 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl cursor-pointer shrink-0" title="Social Connect">
+        <i data-lucide="share-2" class="w-3.5 h-3.5 text-yellow-400"></i> <span class="hidden md:inline">Social</span>
       </button>
-      <a href="#library" class="text-xs font-semibold hover:text-yellow-400 transition-colors flex items-center gap-1.5 text-neutral-300">
-        <i data-lucide="library" class="w-4 h-4"></i> Clip Library
+      <a href="#library" class="text-[11px] sm:text-xs font-semibold hover:text-yellow-400 transition-colors flex items-center gap-1 text-neutral-300 border border-neutral-800 bg-neutral-900/80 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl shrink-0" title="Clip Library">
+        <i data-lucide="library" class="w-3.5 h-3.5"></i> <span class="hidden md:inline">Library</span>
       </a>
     </div>
   </header>
 
   <!-- Main Container -->
-  <main class="flex-1 max-w-6xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <main class="flex-1 max-w-6xl w-full mx-auto p-3.5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
 
     <!-- Left Column: Settings & Input (7 Cols) -->
-    <div class="lg:col-span-7 space-y-6">
+    <div class="lg:col-span-7 space-y-4 sm:space-y-6">
 
       <!-- 1. Source Input Card -->
       <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl">
@@ -94,34 +106,34 @@
       </div>
 
       <!-- 2. Clip Controls (30s / 60s / 90s / 180s) -->
-      <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl space-y-6">
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
+      <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 sm:space-y-6">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
             <i data-lucide="clock" class="w-4 h-4 text-yellow-400"></i> Duration & Allocation
           </h2>
-          <span class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
-            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Quality First: Capped at 5
+          <span class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full flex items-center gap-1">
+            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Capped at 5
           </span>
         </div>
 
         <!-- Duration Selection -->
         <div>
-          <label class="text-xs font-semibold text-neutral-300 block mb-2.5">Target Clip Duration</label>
-          <div class="grid grid-cols-4 gap-2.5" id="durationPicker">
-            <button type="button" data-val="30" class="dur-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all">
-              <div class="text-base font-black text-neutral-200">30s</div>
+          <label class="text-xs font-semibold text-neutral-300 block mb-2">Target Clip Duration</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5" id="durationPicker">
+            <button type="button" data-val="30" class="dur-btn p-2.5 sm:p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all">
+              <div class="text-sm sm:text-base font-black text-neutral-200">30s</div>
               <div class="text-[10px] text-neutral-400">Quick Hook</div>
             </button>
-            <button type="button" data-val="60" class="dur-btn p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-yellow-300 text-center transition-all">
-              <div class="text-base font-black">60s</div>
+            <button type="button" data-val="60" class="dur-btn p-2.5 sm:p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-yellow-300 text-center transition-all">
+              <div class="text-sm sm:text-base font-black">60s</div>
               <div class="text-[10px] text-yellow-400/80">Standard Short</div>
             </button>
-            <button type="button" data-val="90" class="dur-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all">
-              <div class="text-base font-black text-neutral-200">90s</div>
+            <button type="button" data-val="90" class="dur-btn p-2.5 sm:p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all">
+              <div class="text-sm sm:text-base font-black text-neutral-200">90s</div>
               <div class="text-[10px] text-neutral-400">Story Arc</div>
             </button>
-            <button type="button" data-val="180" class="dur-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all">
-              <div class="text-base font-black text-neutral-200">180s</div>
+            <button type="button" data-val="180" class="dur-btn p-2.5 sm:p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all">
+              <div class="text-sm sm:text-base font-black text-neutral-200">180s</div>
               <div class="text-[10px] text-neutral-400">3-Min Short</div>
             </button>
           </div>
@@ -133,19 +145,19 @@
             <label class="text-xs font-semibold text-neutral-300">Clips to Extract</label>
             <span class="text-xs text-neutral-400 font-mono" id="clipCountLabel">3 Clips Selected</span>
           </div>
-          <div class="grid grid-cols-5 gap-2" id="clipCountPicker">
-            <button type="button" data-count="1" class="count-btn py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">1</button>
-            <button type="button" data-count="2" class="count-btn py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">2</button>
-            <button type="button" data-count="3" class="count-btn py-2.5 rounded-xl border border-white bg-white text-black text-xs font-bold">3</button>
-            <button type="button" data-count="4" class="count-btn py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">4</button>
-            <button type="button" data-count="5" class="count-btn py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">5 (Max)</button>
+          <div class="grid grid-cols-5 gap-1.5 sm:gap-2" id="clipCountPicker">
+            <button type="button" data-count="1" class="count-btn py-2 sm:py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">1</button>
+            <button type="button" data-count="2" class="count-btn py-2 sm:py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">2</button>
+            <button type="button" data-count="3" class="count-btn py-2 sm:py-2.5 rounded-xl border border-white bg-white text-black text-xs font-bold">3</button>
+            <button type="button" data-count="4" class="count-btn py-2 sm:py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">4</button>
+            <button type="button" data-count="5" class="count-btn py-2 sm:py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700">5 (Max)</button>
           </div>
         </div>
 
         <!-- Aspect Ratio -->
         <div>
           <label class="text-xs font-semibold text-neutral-300 block mb-2">Aspect Ratio & Framing</label>
-          <div class="grid grid-cols-3 gap-2" id="aspectPicker">
+          <div class="grid grid-cols-3 gap-1.5 sm:gap-2" id="aspectPicker">
             <button type="button" data-aspect="9:16" class="aspect-btn py-2 rounded-xl border border-blue-500 bg-blue-500/10 text-blue-400 text-xs font-bold">9:16 Vertical</button>
             <button type="button" data-aspect="16:9" class="aspect-btn py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-400 text-xs font-semibold hover:border-neutral-700">16:9 Landscape</button>
             <button type="button" data-aspect="1:1" class="aspect-btn py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-400 text-xs font-semibold hover:border-neutral-700">1:1 Square</button>
@@ -154,37 +166,37 @@
       </div>
 
       <!-- 3. Subtitle Styler & Effects -->
-      <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl space-y-6">
-        <h2 class="text-sm font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
+      <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 sm:space-y-6">
+        <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
           <i data-lucide="type" class="w-4 h-4 text-yellow-400"></i> Caption Theme & Visual Atmosphere
         </h2>
 
         <!-- Themes -->
-        <div class="grid grid-cols-3 gap-2.5" id="themePicker">
-          <button type="button" data-theme="hormozi" class="theme-btn p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-left transition-all">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5" id="themePicker">
+          <button type="button" data-theme="hormozi" class="theme-btn p-2.5 sm:p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-left transition-all">
             <div class="text-xs font-bold text-yellow-300">Hormozi Pop</div>
             <div class="text-[10px] text-yellow-400/70">Neon Yellow Bounce</div>
           </button>
-          <button type="button" data-theme="mrbeast" class="theme-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
+          <button type="button" data-theme="mrbeast" class="theme-btn p-2.5 sm:p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
             <div class="text-xs font-bold text-neutral-200">Beast Pop</div>
             <div class="text-[10px] text-neutral-400">Cyan Dynamic Tilt</div>
           </button>
-          <button type="button" data-theme="raj_shamani" class="theme-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
+          <button type="button" data-theme="raj_shamani" class="theme-btn p-2.5 sm:p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
             <div class="text-xs font-bold text-neutral-200">Raj Shamani</div>
             <div class="text-[10px] text-neutral-400">Minimal Amber</div>
           </button>
-          <button type="button" data-theme="karaoke" class="theme-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
+          <button type="button" data-theme="karaoke" class="theme-btn p-2.5 sm:p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
             <div class="text-xs font-bold text-neutral-200">Karaoke</div>
             <div class="text-[10px] text-neutral-400">Live Word Sweep</div>
           </button>
-          <button type="button" data-theme="clean" class="theme-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700">
+          <button type="button" data-theme="clean" class="theme-btn p-2.5 sm:p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700 col-span-2 sm:col-span-1">
             <div class="text-xs font-bold text-neutral-200">Clean White</div>
             <div class="text-[10px] text-neutral-400">Classic Subtitle</div>
           </button>
         </div>
 
         <!-- Atmosphere Toggles & Watermark -->
-        <div class="grid grid-cols-2 gap-4 pt-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2">
           <div>
             <label class="text-xs font-semibold text-neutral-400 block mb-1">Watermark Handle</label>
             <input type="text" id="watermark" value="@clipstack_A1" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400" />
@@ -195,39 +207,39 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-4 pt-1 flex-wrap">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
           <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
-            <input type="checkbox" id="aiThumbToggle" checked class="w-4 h-4 accent-amber-400 rounded" />
-            <span class="text-amber-400 font-bold">✨ AI Generated Viral 8K Thumbnail</span> (Hyper-realistic poster)
+            <input type="checkbox" id="aiThumbToggle" checked class="w-4 h-4 accent-amber-400 rounded shrink-0" />
+            <span><strong class="text-amber-400">✨ AI 8K Thumbnail</strong> (Hyper-realistic poster)</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
-            <input type="checkbox" id="floatingWmToggle" checked class="w-4 h-4 accent-yellow-400 rounded" />
-            <span class="text-yellow-400 font-bold">🌊 Anti-AI Floating Watermark</span> (Drifts across frame to prevent removal)
+            <input type="checkbox" id="floatingWmToggle" checked class="w-4 h-4 accent-yellow-400 rounded shrink-0" />
+            <span><strong class="text-yellow-400">🌊 Anti-AI Floating Mark</strong> (Drifts edge-to-edge)</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
-            <input type="checkbox" id="vignetteToggle" checked class="w-4 h-4 accent-yellow-400 rounded" />
-            Vignette Atmosphere
+            <input type="checkbox" id="vignetteToggle" checked class="w-4 h-4 accent-yellow-400 rounded shrink-0" />
+            <span>Vignette Atmosphere</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
-            <input type="checkbox" id="grainToggle" checked class="w-4 h-4 accent-yellow-400 rounded" />
-            Cinematic Film Grain
+            <input type="checkbox" id="grainToggle" checked class="w-4 h-4 accent-yellow-400 rounded shrink-0" />
+            <span>Cinematic Film Grain</span>
           </label>
         </div>
       </div>
 
       <!-- 4. Channel Profile & Brand Kit Card -->
-      <div class="bg-neutral-900/90 border border-cyan-500/30 rounded-2xl p-5 shadow-xl relative overflow-hidden space-y-4">
+      <div class="bg-neutral-900/90 border border-cyan-500/30 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden space-y-4">
         <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-bold uppercase tracking-wider text-neutral-200 flex items-center gap-2">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-neutral-200 flex items-center gap-2">
             <i data-lucide="shield-check" class="w-4 h-4 text-cyan-400"></i> Channel Profile & Brand Kit
           </h2>
-          <span class="bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+          <span class="bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> Active: <span id="brandHandleBadge">@clipstack_A1</span>
           </span>
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
           <!-- Logo Preview & Upload Trigger -->
           <div class="relative shrink-0 group">
             <div class="w-16 h-16 rounded-2xl border-2 border-cyan-400/60 bg-neutral-950 overflow-hidden shadow-lg relative flex items-center justify-center">
@@ -240,8 +252,8 @@
           </div>
 
           <!-- Channel Handle & Brand Name Details -->
-          <div class="flex-1 min-w-[200px] space-y-2">
-            <div class="grid grid-cols-2 gap-2">
+          <div class="w-full flex-1 space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <label class="text-[11px] font-semibold text-neutral-400 block mb-0.5">Brand / Channel Name</label>
                 <input type="text" id="brandChannelName" value="ClipStack" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400" />
@@ -253,7 +265,7 @@
             </div>
 
             <!-- Platform-Specific Social Handles -->
-            <div class="grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <label class="text-[10px] font-semibold text-red-400 block mb-0.5 flex items-center gap-1">
                   <span>🔴</span> YouTube
@@ -275,7 +287,7 @@
             </div>
 
             <!-- Logo Position & Size Controls (Safe from Title Text) -->
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <label class="text-[11px] font-semibold text-neutral-400 block mb-0.5">Thumbnail Logo Placement</label>
                 <select id="brandLogoPosition" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-2.5 py-1.5 text-xs text-neutral-200 focus:outline-none focus:border-cyan-400">
@@ -296,13 +308,13 @@
               </div>
             </div>
 
-            <div class="flex items-center justify-between pt-1 flex-wrap gap-2">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pt-1 gap-2.5">
               <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
-                <input type="checkbox" id="brandEmbedToggle" checked class="w-4 h-4 accent-cyan-400 rounded" />
-                <span>Auto-embed logo badge on generated thumbnails</span>
+                <input type="checkbox" id="brandEmbedToggle" checked class="w-4 h-4 accent-cyan-400 rounded shrink-0" />
+                <span class="text-[11px] sm:text-xs">Auto-embed logo badge on generated thumbnails</span>
               </label>
-              <button type="button" id="saveBrandingBtn" class="text-xs bg-cyan-500 hover:bg-cyan-400 text-black px-3 py-1 rounded-lg font-bold transition-all flex items-center gap-1 shadow-sm active:scale-95">
-                <i data-lucide="check" class="w-3 h-3"></i> Save Profile
+              <button type="button" id="saveBrandingBtn" class="text-xs bg-cyan-500 hover:bg-cyan-400 text-black px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center justify-center gap-1 shadow-sm active:scale-95 shrink-0">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i> Save Profile
               </button>
             </div>
           </div>
@@ -313,7 +325,7 @@
       <button 
         type="button" 
         id="generateBtn"
-        class="w-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-black font-extrabold text-base py-4 rounded-2xl shadow-xl glow-yellow transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
+        class="w-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-black font-extrabold text-sm sm:text-base py-3.5 sm:py-4 rounded-2xl shadow-xl glow-yellow transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
       >
         <i data-lucide="sparkles" class="w-5 h-5"></i> Generate Viral Clips
       </button>
@@ -324,30 +336,30 @@
     <div class="lg:col-span-5 space-y-6">
 
       <!-- Live Pipeline Monitor Card -->
-      <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl">
-        <h2 class="text-sm font-bold uppercase tracking-wider text-neutral-400 mb-4 flex items-center gap-2">
+      <div class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-3">
+        <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
           <i data-lucide="activity" class="w-4 h-4 text-yellow-400"></i> Live Neural Console
         </h2>
 
         <!-- Progress Bar -->
-        <div class="mb-4">
+        <div>
           <div class="flex justify-between text-xs text-neutral-400 mb-1.5 font-medium">
             <span id="statusLabel">Standby</span>
             <span id="percentLabel" class="font-mono text-yellow-400">0%</span>
           </div>
-          <div class="w-full bg-neutral-950 rounded-full h-2.5 overflow-hidden border border-neutral-800">
+          <div class="w-full bg-neutral-950 rounded-full h-2 sm:h-2.5 overflow-hidden border border-neutral-800">
             <div id="progressBar" class="bg-gradient-to-r from-yellow-400 to-amber-500 h-full w-0 transition-all duration-300"></div>
           </div>
         </div>
 
         <!-- Live Log Terminal Box -->
-        <div id="logBox" class="bg-neutral-950 border border-neutral-800/80 rounded-xl p-3.5 h-60 overflow-y-auto text-xs font-mono text-neutral-400 space-y-1.5 custom-scrollbar">
+        <div id="logBox" class="bg-neutral-950 border border-neutral-800/80 rounded-xl p-3 h-44 sm:h-60 overflow-y-auto text-[11px] sm:text-xs font-mono text-neutral-400 space-y-1 custom-scrollbar">
           <div class="text-neutral-600">> System initialized. Ready to process video.</div>
         </div>
       </div>
 
       <!-- Quick Preview & Player Modal Container -->
-      <div id="playerBox" class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl hidden">
+      <div id="playerBox" class="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-xl hidden">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
             <i data-lucide="play-circle" class="w-4 h-4 text-yellow-400"></i> Clip Player
@@ -357,8 +369,8 @@
         <div class="aspect-[9/16] bg-black rounded-xl overflow-hidden max-h-[460px] mx-auto border border-neutral-800 relative">
           <video id="videoPlayer" controls class="w-full h-full object-contain"></video>
         </div>
-        <div class="mt-4 flex gap-2">
-          <a id="downloadBtn" href="#" download class="flex-1 bg-white hover:bg-neutral-200 text-black text-center font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all">
+        <div class="mt-3.5 flex flex-wrap gap-2">
+          <a id="downloadBtn" href="#" download class="flex-1 min-w-[120px] bg-white hover:bg-neutral-200 text-black text-center font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all">
             <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Clip
           </a>
           <button id="playerCopyPathBtn" type="button" class="bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/30 text-center font-bold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95" title="Copy video file path to clipboard">
@@ -375,15 +387,15 @@
   </main>
 
   <!-- Clip Library Section -->
-  <section id="library" class="max-w-6xl w-full mx-auto px-6 py-10 border-t border-neutral-800/80 mt-12">
-    <div class="flex items-center justify-between mb-6">
+  <section id="library" class="max-w-6xl w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-10 border-t border-neutral-800/80 mt-6 sm:mt-12">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
       <div>
-        <h2 class="text-xl font-extrabold flex items-center gap-2">
+        <h2 class="text-lg sm:text-xl font-extrabold flex items-center gap-2">
           <i data-lucide="film" class="text-yellow-400 w-5 h-5"></i> Rendered Clip Library
         </h2>
         <p class="text-xs text-neutral-400">All saved clips ready for preview, review, and direct download.</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <button id="copyExportsFolderBtn" class="text-xs text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-bold transition-all hover:bg-cyan-500/20 shadow-sm" title="Copy full Windows folder path to clipboard">
           <i data-lucide="copy" class="w-3.5 h-3.5 text-cyan-400"></i> Copy Folder Path
         </button>
@@ -394,14 +406,14 @@
     </div>
 
     <!-- Clips Grid -->
-    <div id="clipsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div id="clipsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4">
       <!-- Injected via JavaScript -->
     </div>
   </section>
 
   <!-- Backend Connection Modal (For GitHub Pages / Remote Cloud / Local Tunnel) -->
-  <div id="backendModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4">
+  <div id="backendModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="max-w-md w-full max-h-[92vh] overflow-y-auto bg-neutral-900 border border-neutral-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl space-y-3.5 sm:space-y-4">
       <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
         <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
           <i data-lucide="server" class="w-4 h-4 text-cyan-400"></i> Backend Connection Settings
@@ -438,27 +450,27 @@
   </div>
 
   <!-- 1-Click Social Publish Modal -->
-  <div id="publishModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="max-w-xl w-full bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+  <div id="publishModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="max-w-xl w-full bg-neutral-900 border border-neutral-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
       <!-- Modal Header -->
-      <div class="p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
+      <div class="p-3.5 sm:p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
         <div>
-          <h3 class="text-base font-extrabold flex items-center gap-2 text-white">
-            <span class="text-yellow-400 text-lg">🚀</span> 1-Click Social Auto-Publisher
+          <h3 class="text-sm sm:text-base font-extrabold flex items-center gap-2 text-white">
+            <span class="text-yellow-400 text-base sm:text-lg">🚀</span> 1-Click Social Auto-Publisher
           </h3>
-          <p class="text-xs text-neutral-400">Dispatch this reel across YouTube Shorts, Instagram Reels, TikTok & Webhooks.</p>
+          <p class="text-[11px] sm:text-xs text-neutral-400">Dispatch this reel across YouTube Shorts, Instagram Reels, TikTok & Webhooks.</p>
         </div>
         <button id="closePublishModal" class="text-neutral-500 hover:text-white p-1 rounded-lg text-sm">✕</button>
       </div>
 
       <!-- Modal Body -->
-      <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+      <div class="p-3.5 sm:p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
         <!-- Clip summary pill -->
         <div class="flex items-center gap-3 p-3 bg-neutral-950 rounded-xl border border-neutral-800">
           <img id="pubClipThumb" src="" class="w-12 h-16 object-cover rounded-lg border border-neutral-700 bg-neutral-900 shrink-0" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
           <div class="flex-1 min-w-0">
             <div id="pubClipTitle" class="font-bold text-white text-xs truncate">Clip Title</div>
-            <div class="text-[11px] text-neutral-400 flex items-center gap-2 mt-1">
+            <div class="text-[11px] text-neutral-400 flex items-center gap-2 mt-1 flex-wrap">
               <span id="pubClipId" class="font-mono text-yellow-400/90">clip_id</span>
               <span>•</span>
               <span id="pubClipDuration" class="text-neutral-300">30s</span>
@@ -471,9 +483,9 @@
         <!-- Target Platform Selector -->
         <div>
           <label class="block font-bold uppercase tracking-wider text-[11px] text-neutral-400 mb-2">Target Platforms</label>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-neutral-800 bg-neutral-950/70 cursor-pointer hover:border-neutral-700 transition-colors">
-              <input type="checkbox" id="pubYt" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4">
+              <input type="checkbox" id="pubYt" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4 shrink-0">
               <div>
                 <div class="font-bold text-white text-xs flex items-center gap-1.5"><span class="text-red-500">▶</span> YouTube Shorts</div>
                 <div class="text-[10px] text-neutral-500">Auto #Shorts & Resumable</div>
@@ -481,7 +493,7 @@
             </label>
 
             <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-neutral-800 bg-neutral-950/70 cursor-pointer hover:border-neutral-700 transition-colors">
-              <input type="checkbox" id="pubIg" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4">
+              <input type="checkbox" id="pubIg" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4 shrink-0">
               <div>
                 <div class="font-bold text-white text-xs flex items-center gap-1.5"><span class="text-pink-500">📸</span> Instagram Reels</div>
                 <div class="text-[10px] text-neutral-500">Meta Graph API v19.0</div>
@@ -489,7 +501,7 @@
             </label>
 
             <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-neutral-800 bg-neutral-950/70 cursor-pointer hover:border-neutral-700 transition-colors">
-              <input type="checkbox" id="pubTt" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4">
+              <input type="checkbox" id="pubTt" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4 shrink-0">
               <div>
                 <div class="font-bold text-white text-xs flex items-center gap-1.5"><span class="text-cyan-400">🎵</span> TikTok</div>
                 <div class="text-[10px] text-neutral-500">Viral Sound & FYP</div>
@@ -497,7 +509,7 @@
             </label>
 
             <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-neutral-800 bg-neutral-950/70 cursor-pointer hover:border-neutral-700 transition-colors">
-              <input type="checkbox" id="pubWh" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4">
+              <input type="checkbox" id="pubWh" checked class="rounded border-neutral-700 text-yellow-400 focus:ring-0 w-4 h-4 shrink-0">
               <div>
                 <div class="font-bold text-white text-xs flex items-center gap-1.5"><span class="text-amber-400">⚡</span> Webhook</div>
                 <div class="text-[10px] text-neutral-500">Make / Zapier / Blotato</div>
@@ -508,9 +520,9 @@
 
         <!-- Copy & Content Generator -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <label class="font-bold uppercase tracking-wider text-[11px] text-neutral-400">Viral Copy & Hook</label>
-            <button id="pubGenerateCopyBtn" type="button" class="text-[11px] bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 px-2.5 py-1 rounded-lg flex items-center gap-1 font-bold transition-colors">
+            <button id="pubGenerateCopyBtn" type="button" class="text-[11px] bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 px-2.5 py-1 rounded-lg flex items-center justify-center gap-1 font-bold transition-colors">
               <i data-lucide="sparkles" class="w-3 h-3"></i> Auto-Generate Viral Copy
             </button>
           </div>
@@ -571,26 +583,26 @@
   </div>
 
   <!-- Platform Connect Settings Modal -->
-  <div id="socialSettingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="max-w-2xl w-full bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-      <div class="p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
+  <div id="socialSettingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="max-w-2xl w-full bg-neutral-900 border border-neutral-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="p-3.5 sm:p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
         <div>
-          <h3 class="text-base font-extrabold flex items-center gap-2 text-white">
-            <span class="text-yellow-400 text-lg">⚡</span> 2-Click Social Media Connect
+          <h3 class="text-sm sm:text-base font-extrabold flex items-center gap-2 text-white">
+            <span class="text-yellow-400 text-base sm:text-lg">⚡</span> 2-Click Social Media Connect
           </h3>
-          <p class="text-xs text-neutral-400">Directly connect your accounts with 2 clicks & 2FA. No Client Secrets needed!</p>
+          <p class="text-[11px] sm:text-xs text-neutral-400">Directly connect your accounts with 2 clicks & 2FA. No Client Secrets needed!</p>
         </div>
         <button id="closeSocialSettingsModal" class="text-neutral-500 hover:text-white p-1 rounded-lg text-sm">✕</button>
       </div>
 
-      <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+      <div class="p-3.5 sm:p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
         
         <!-- Zero Setup Hero Banner -->
-        <div class="p-3.5 bg-gradient-to-r from-yellow-400/10 via-amber-500/10 to-transparent border border-yellow-400/20 rounded-xl space-y-1">
+        <div class="p-3 sm:p-3.5 bg-gradient-to-r from-yellow-400/10 via-amber-500/10 to-transparent border border-yellow-400/20 rounded-xl space-y-1">
           <div class="font-bold text-yellow-300 flex items-center gap-1.5 text-xs">
             <span>✨</span> 2-Click Direct Login Active (Zero Developer Setup)
           </div>
-          <div class="text-[11px] text-neutral-400">
+          <div class="text-[11px] text-neutral-400 leading-relaxed">
             Click <strong>Connect</strong> to launch the official sign-in window on your screen. Enter your email, password & 2FA. Your session links instantly!
           </div>
         </div>
@@ -600,72 +612,72 @@
           <div class="font-bold uppercase tracking-wider text-[11px] text-neutral-400">Connected Accounts</div>
 
           <!-- YouTube Card -->
-          <div class="p-3.5 bg-neutral-950 rounded-xl border border-neutral-800 flex items-center justify-between gap-3">
+          <div class="p-3 sm:p-3.5 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
               <div class="w-10 h-10 rounded-xl bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-500 text-lg shrink-0">
                 ▶
               </div>
               <div class="min-w-0">
-                <div class="font-bold text-white text-xs flex items-center gap-2">
+                <div class="font-bold text-white text-xs flex items-center gap-2 flex-wrap">
                   YouTube Shorts
                   <span id="ytBadge" class="text-[9px] px-2 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400 border border-neutral-700">Checking...</span>
                 </div>
                 <div id="ytDesc" class="text-[10px] text-neutral-500 truncate mt-0.5">Google Sign-In with 2FA support</div>
               </div>
             </div>
-            <div class="shrink-0 flex items-center gap-2">
-              <button id="ytConnectBtn" class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow transition-all flex items-center gap-1.5">
+            <div class="w-full sm:w-auto flex items-center gap-2 justify-end">
+              <button id="ytConnectBtn" class="w-full sm:w-auto justify-center bg-red-600 hover:bg-red-500 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow transition-all flex items-center gap-1.5">
                 <i data-lucide="log-in" class="w-3.5 h-3.5"></i> Connect Google
               </button>
-              <button id="ytDisconnectBtn" class="bg-neutral-800 hover:bg-red-950 hover:text-red-300 text-red-400 font-bold text-xs py-2 px-3 rounded-xl border border-neutral-700 hidden">
+              <button id="ytDisconnectBtn" class="w-full sm:w-auto justify-center bg-neutral-800 hover:bg-red-950 hover:text-red-300 text-red-400 font-bold text-xs py-2 px-3 rounded-xl border border-neutral-700 hidden">
                 Disconnect
               </button>
             </div>
           </div>
 
           <!-- Instagram Card -->
-          <div class="p-3.5 bg-neutral-950 rounded-xl border border-neutral-800 flex items-center justify-between gap-3">
+          <div class="p-3 sm:p-3.5 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
               <div class="w-10 h-10 rounded-xl bg-pink-600/10 border border-pink-500/20 flex items-center justify-center text-pink-500 text-lg shrink-0">
                 📸
               </div>
               <div class="min-w-0">
-                <div class="font-bold text-white text-xs flex items-center gap-2">
+                <div class="font-bold text-white text-xs flex items-center gap-2 flex-wrap">
                   Instagram Reels
                   <span id="igBadge" class="text-[9px] px-2 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400 border border-neutral-700">Checking...</span>
                 </div>
                 <div id="igDesc" class="text-[10px] text-neutral-500 truncate mt-0.5">Direct Instagram login with 2FA support</div>
               </div>
             </div>
-            <div class="shrink-0 flex items-center gap-2">
-              <button id="igConnectBtn" class="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow transition-all flex items-center gap-1.5">
+            <div class="w-full sm:w-auto flex items-center gap-2 justify-end">
+              <button id="igConnectBtn" class="w-full sm:w-auto justify-center bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow transition-all flex items-center gap-1.5">
                 <i data-lucide="log-in" class="w-3.5 h-3.5"></i> Connect Instagram
               </button>
-              <button id="igDisconnectBtn" class="bg-neutral-800 hover:bg-red-950 hover:text-red-300 text-red-400 font-bold text-xs py-2 px-3 rounded-xl border border-neutral-700 hidden">
+              <button id="igDisconnectBtn" class="w-full sm:w-auto justify-center bg-neutral-800 hover:bg-red-950 hover:text-red-300 text-red-400 font-bold text-xs py-2 px-3 rounded-xl border border-neutral-700 hidden">
                 Disconnect
               </button>
             </div>
           </div>
 
           <!-- TikTok Card -->
-          <div class="p-3.5 bg-neutral-950 rounded-xl border border-neutral-800 flex items-center justify-between gap-3">
+          <div class="p-3 sm:p-3.5 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
               <div class="w-10 h-10 rounded-xl bg-cyan-600/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-lg shrink-0">
                 🎵
               </div>
               <div class="min-w-0">
-                <div class="font-bold text-white text-xs flex items-center gap-2">
+                <div class="font-bold text-white text-xs flex items-center gap-2 flex-wrap">
                   TikTok
                   <span id="ttBadge" class="text-[9px] px-2 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400 border border-neutral-700">Checking...</span>
                 </div>
                 <div id="ttDesc" class="text-[10px] text-neutral-500 truncate mt-0.5">Link TikTok via password or QR scan</div>
               </div>
             </div>
-            <div class="shrink-0 flex items-center gap-2">
-              <button id="ttConnectBtn" class="bg-neutral-800 hover:bg-neutral-700 text-cyan-300 border border-cyan-500/30 font-bold text-xs py-2 px-3.5 rounded-xl shadow transition-all flex items-center gap-1.5">
+            <div class="w-full sm:w-auto flex items-center gap-2 justify-end">
+              <button id="ttConnectBtn" class="w-full sm:w-auto justify-center bg-neutral-800 hover:bg-neutral-700 text-cyan-300 border border-cyan-500/30 font-bold text-xs py-2 px-3.5 rounded-xl shadow transition-all flex items-center gap-1.5">
                 <i data-lucide="log-in" class="w-3.5 h-3.5"></i> Connect TikTok
               </button>
-              <button id="ttDisconnectBtn" class="bg-neutral-800 hover:bg-red-950 hover:text-red-300 text-red-400 font-bold text-xs py-2 px-3 rounded-xl border border-neutral-700 hidden">
+              <button id="ttDisconnectBtn" class="w-full sm:w-auto justify-center bg-neutral-800 hover:bg-red-950 hover:text-red-300 text-red-400 font-bold text-xs py-2 px-3 rounded-xl border border-neutral-700 hidden">
                 Disconnect
               </button>
             </div>
@@ -711,92 +723,92 @@
   </div>
 
   <!-- Multi-Platform Viral Copy & Hashtags Hub Modal -->
-  <div id="viralCopyModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="max-w-4xl w-full bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+  <div id="viralCopyModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="max-w-4xl w-full bg-neutral-900 border border-neutral-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
       <!-- Modal Header -->
-      <div class="p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/80">
+      <div class="p-3.5 sm:p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/80">
         <div>
-          <h3 class="text-base font-extrabold flex items-center gap-2 text-white">
-            <span class="text-amber-400 text-lg">🔥</span> Multi-Platform Viral Copy & Hashtags Center
+          <h3 class="text-sm sm:text-base font-extrabold flex items-center gap-2 text-white">
+            <span class="text-amber-400 text-base sm:text-lg">🔥</span> Multi-Platform Viral Copy & Hashtags
           </h3>
-          <p class="text-xs text-neutral-400">2026 Algorithmic High-Retention Hooks, Captions & Tested Hashtags ready to copy in 1-click.</p>
+          <p class="text-[11px] sm:text-xs text-neutral-400">2026 Algorithmic High-Retention Hooks, Captions & Tested Hashtags ready in 1-click.</p>
         </div>
         <button id="closeViralCopyModal" class="text-neutral-500 hover:text-white p-1 rounded-lg text-sm">✕</button>
       </div>
 
       <!-- Clip Header Summary Banner -->
-      <div class="px-6 py-3 bg-neutral-950/60 border-b border-neutral-800/80 flex items-center justify-between flex-wrap gap-3">
+      <div class="px-3.5 sm:px-6 py-2.5 sm:py-3 bg-neutral-950/60 border-b border-neutral-800/80 flex items-center justify-between flex-wrap gap-2.5">
         <div class="flex items-center gap-3 min-w-0">
           <img id="vcClipThumb" src="" class="w-10 h-14 object-cover rounded-lg border border-neutral-800 bg-neutral-900 shrink-0" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
           <div class="min-w-0">
-            <div id="vcClipTitle" class="text-xs font-bold text-white truncate max-w-md">Clip Title</div>
-            <div class="text-[11px] text-neutral-400 flex items-center gap-2 mt-0.5 flex-wrap">
+            <div id="vcClipTitle" class="text-xs font-bold text-white truncate max-w-xs sm:max-w-md">Clip Title</div>
+            <div class="text-[11px] text-neutral-400 flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
               <span id="vcClipId" class="font-mono text-cyan-400">clip_id</span>
               <span>•</span>
-              <span class="flex items-center gap-2 flex-wrap">
-                <span class="text-red-400 font-mono text-[11px]">🔴 YT: <strong id="vcYtHandle">@clipstack_A1</strong></span>
+              <span class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <span class="text-red-400 font-mono text-[10px] sm:text-[11px]">🔴 <strong id="vcYtHandle">@clipstack_A1</strong></span>
                 <span class="text-neutral-600">|</span>
-                <span class="text-pink-400 font-mono text-[11px]">📸 IG: <strong id="vcIgHandle">@clip_stacka1</strong></span>
+                <span class="text-pink-400 font-mono text-[10px] sm:text-[11px]">📸 <strong id="vcIgHandle">@clip_stacka1</strong></span>
                 <span class="text-neutral-600">|</span>
-                <span class="text-cyan-400 font-mono text-[11px]">🐦 X: <strong id="vcXHandle">@clipstack_A1</strong></span>
+                <span class="text-cyan-400 font-mono text-[10px] sm:text-[11px]">🐦 <strong id="vcXHandle">@clipstack_A1</strong></span>
               </span>
             </div>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button id="vcRegenBtn" type="button" class="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Regenerate Copy
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Regenerate
           </button>
           <button id="vcDeleteClipBtn" type="button" class="text-xs bg-red-950/60 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 hover:border-red-500 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95" title="Permanently delete this clip from device and website">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400 hover:text-white"></i> Delete Clip
+            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400 hover:text-white"></i> Delete
           </button>
         </div>
       </div>
 
       <!-- Direct Local File Paths Strip for 1-Click Uploading -->
-      <div class="px-6 py-2.5 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between gap-3 text-xs flex-wrap">
-        <div class="flex items-center gap-2 text-[11px] text-neutral-400 font-bold uppercase tracking-wider shrink-0">
+      <div class="px-3.5 sm:px-6 py-2 bg-neutral-950 border-b border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-neutral-400 font-bold uppercase tracking-wider shrink-0">
           <i data-lucide="folder-check" class="w-3.5 h-3.5 text-cyan-400"></i> Local Files for Upload:
         </div>
-        <div class="flex items-center gap-2 flex-wrap">
-          <button type="button" id="vcModalCopyVidPathBtn" class="bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/30 text-[11px] font-mono font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-sm" title="Copy absolute Windows path of this clip video MP4">
-            <i data-lucide="copy" class="w-3 h-3 text-cyan-400"></i> 📋 Copy Video Path
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <button type="button" id="vcModalCopyVidPathBtn" class="bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/30 text-[10px] sm:text-[11px] font-mono font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl flex items-center gap-1 transition-all active:scale-95 shadow-sm" title="Copy absolute Windows path of this clip video MP4">
+            <i data-lucide="copy" class="w-3 h-3 text-cyan-400"></i> Video Path
           </button>
-          <button type="button" id="vcModalCopyThumbPathBtn" class="bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-500/30 text-[11px] font-mono font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-sm" title="Copy absolute Windows path of this thumbnail image">
-            <i data-lucide="copy" class="w-3 h-3 text-amber-400"></i> 📋 Copy Thumb Path
+          <button type="button" id="vcModalCopyThumbPathBtn" class="bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-500/30 text-[10px] sm:text-[11px] font-mono font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl flex items-center gap-1 transition-all active:scale-95 shadow-sm" title="Copy absolute Windows path of this thumbnail image">
+            <i data-lucide="copy" class="w-3 h-3 text-amber-400"></i> Thumb Path
           </button>
-          <button type="button" id="vcModalCopyFolderBtn" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 text-[11px] font-mono font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95" title="Copy directory path of exports folder">
-            <i data-lucide="folder" class="w-3 h-3 text-neutral-400"></i> 📋 Copy Folder Path
+          <button type="button" id="vcModalCopyFolderBtn" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 text-[10px] sm:text-[11px] font-mono font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl flex items-center gap-1 transition-all active:scale-95" title="Copy directory path of exports folder">
+            <i data-lucide="folder" class="w-3 h-3 text-neutral-400"></i> Folder Path
           </button>
         </div>
       </div>
 
       <!-- Navigation Tabs (YouTube Shorts | Instagram Reels | X (Twitter) | TikTok) -->
-      <div class="flex border-b border-neutral-800 bg-neutral-950/40 px-6 gap-2 pt-2">
-        <button type="button" class="vc-tab-btn active px-4 py-2.5 text-xs font-bold border-b-2 border-red-500 text-red-400 flex items-center gap-2 transition-all" data-tab="yt">
+      <div class="flex border-b border-neutral-800 bg-neutral-950/40 px-3 sm:px-6 gap-1 sm:gap-2 pt-2 overflow-x-auto no-scrollbar flex-nowrap">
+        <button type="button" class="vc-tab-btn active shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold border-b-2 border-red-500 text-red-400 flex items-center gap-1.5 transition-all" data-tab="yt">
           <span class="w-2 h-2 rounded-full bg-red-500"></span> 🔴 YouTube Shorts
         </button>
-        <button type="button" class="vc-tab-btn px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-neutral-400 hover:text-pink-400 flex items-center gap-2 transition-all" data-tab="ig">
+        <button type="button" class="vc-tab-btn shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold border-b-2 border-transparent text-neutral-400 hover:text-pink-400 flex items-center gap-1.5 transition-all" data-tab="ig">
           <span class="w-2 h-2 rounded-full bg-pink-500"></span> 📸 Instagram Reels
         </button>
-        <button type="button" class="vc-tab-btn px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-neutral-400 hover:text-cyan-400 flex items-center gap-2 transition-all" data-tab="x">
+        <button type="button" class="vc-tab-btn shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold border-b-2 border-transparent text-neutral-400 hover:text-cyan-400 flex items-center gap-1.5 transition-all" data-tab="x">
           <span class="w-2 h-2 rounded-full bg-cyan-400"></span> 🐦 X (Twitter)
         </button>
-        <button type="button" class="vc-tab-btn px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-neutral-400 hover:text-emerald-400 flex items-center gap-2 transition-all" data-tab="tt">
+        <button type="button" class="vc-tab-btn shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold border-b-2 border-transparent text-neutral-400 hover:text-emerald-400 flex items-center gap-1.5 transition-all" data-tab="tt">
           <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 🎵 TikTok
         </button>
       </div>
 
       <!-- Tab Contents Container -->
-      <div class="p-6 overflow-y-auto space-y-5 custom-scrollbar text-xs">
+      <div class="p-3.5 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 custom-scrollbar text-xs">
         
         <!-- Tab 1: YouTube Shorts -->
-        <div id="vcTabContentYt" class="vc-tab-panel space-y-4">
-          <div class="flex items-center justify-between">
+        <div id="vcTabContentYt" class="vc-tab-panel space-y-3.5 sm:space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div class="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i data-lucide="youtube" class="w-4 h-4"></i> YouTube Shorts Formula (2026 High CTR & Retention)
+              <i data-lucide="youtube" class="w-4 h-4"></i> YouTube Shorts Formula
             </div>
-            <button class="copy-field-btn text-xs bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 px-3 py-1 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcYtAll">
+            <button class="copy-field-btn w-full sm:w-auto justify-center text-xs bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcYtAll">
               <i data-lucide="copy" class="w-3 h-3"></i> 📋 Copy Full YouTube Package
             </button>
           </div>
@@ -837,12 +849,12 @@
         </div>
 
         <!-- Tab 2: Instagram Reels -->
-        <div id="vcTabContentIg" class="vc-tab-panel space-y-4 hidden">
-          <div class="flex items-center justify-between">
+        <div id="vcTabContentIg" class="vc-tab-panel space-y-3.5 sm:space-y-4 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div class="text-xs font-bold text-pink-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i data-lucide="instagram" class="w-4 h-4"></i> Instagram Reels Formula (DM Shares & SEO Indexing)
+              <i data-lucide="instagram" class="w-4 h-4"></i> Instagram Reels Formula
             </div>
-            <button class="copy-field-btn text-xs bg-pink-500/15 hover:bg-pink-500/25 text-pink-300 border border-pink-500/30 px-3 py-1 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcIgAll">
+            <button class="copy-field-btn w-full sm:w-auto justify-center text-xs bg-pink-500/15 hover:bg-pink-500/25 text-pink-300 border border-pink-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcIgAll">
               <i data-lucide="copy" class="w-3 h-3"></i> 📋 Copy Full Reels Caption + Tags
             </button>
           </div>
@@ -872,12 +884,12 @@
         </div>
 
         <!-- Tab 3: X (Twitter) -->
-        <div id="vcTabContentX" class="vc-tab-panel space-y-4 hidden">
-          <div class="flex items-center justify-between">
+        <div id="vcTabContentX" class="vc-tab-panel space-y-3.5 sm:space-y-4 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i data-lucide="twitter" class="w-4 h-4"></i> X / Twitter Formula (High Velocity, &lt; 280 chars, Reply-Driver)
+              <i data-lucide="twitter" class="w-4 h-4"></i> X / Twitter Formula (< 280 chars)
             </div>
-            <button class="copy-field-btn text-xs bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcXPost">
+            <button class="copy-field-btn w-full sm:w-auto justify-center text-xs bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcXPost">
               <i data-lucide="copy" class="w-3 h-3"></i> 📋 Copy Full Post
             </button>
           </div>
@@ -910,12 +922,12 @@
         </div>
 
         <!-- Tab 4: TikTok -->
-        <div id="vcTabContentTt" class="vc-tab-panel space-y-4 hidden">
-          <div class="flex items-center justify-between">
+        <div id="vcTabContentTt" class="vc-tab-panel space-y-3.5 sm:space-y-4 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i data-lucide="music" class="w-4 h-4"></i> TikTok Formula (FYP Retention & Trend Tags)
+              <i data-lucide="music" class="w-4 h-4"></i> TikTok Formula (FYP Retention)
             </div>
-            <button class="copy-field-btn text-xs bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcTtCaption">
+            <button class="copy-field-btn w-full sm:w-auto justify-center text-xs bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-bold transition-all" data-target="vcTtCaption">
               <i data-lucide="copy" class="w-3 h-3"></i> 📋 Copy Full TikTok Caption
             </button>
           </div>
@@ -962,19 +974,19 @@
   </div>
 
   <!-- Publish History Modal -->
-  <div id="publishHistoryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="max-w-3xl w-full bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-      <div class="p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
+  <div id="publishHistoryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="max-w-3xl w-full bg-neutral-900 border border-neutral-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+      <div class="p-3.5 sm:p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
         <div>
-          <h3 class="text-base font-extrabold flex items-center gap-2 text-white">
-            <span class="text-yellow-400 text-lg">📋</span> Automated Publishing History
+          <h3 class="text-sm sm:text-base font-extrabold flex items-center gap-2 text-white">
+            <span class="text-yellow-400 text-base sm:text-lg">📋</span> Automated Publishing History
           </h3>
-          <p class="text-xs text-neutral-400">Audit logs of all social broadcasts, scheduled drops, and webhook dispatches.</p>
+          <p class="text-[11px] sm:text-xs text-neutral-400">Audit logs of all social broadcasts, scheduled drops, and webhook dispatches.</p>
         </div>
         <button id="closePublishHistoryModal" class="text-neutral-500 hover:text-white p-1 rounded-lg text-sm">✕</button>
       </div>
 
-      <div id="historyListContainer" class="p-5 overflow-y-auto space-y-3 custom-scrollbar text-xs">
+      <div id="historyListContainer" class="p-3.5 sm:p-5 overflow-y-auto space-y-3 custom-scrollbar text-xs">
         <!-- Rendered via JS -->
       </div>
     </div>
@@ -997,11 +1009,13 @@
     document.querySelectorAll('.dur-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.dur-btn').forEach(b => {
-          b.className = 'dur-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all';
-          b.querySelector('div:first-child').className = 'text-base font-black text-neutral-200';
+          b.className = 'dur-btn p-2.5 sm:p-3 rounded-xl border border-neutral-800 bg-neutral-950/60 hover:border-neutral-700 text-center transition-all';
+          const title = b.querySelector('div:first-child');
+          if (title) title.className = 'text-sm sm:text-base font-black text-neutral-200';
         });
-        btn.className = 'dur-btn p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-yellow-300 text-center transition-all';
-        btn.querySelector('div:first-child').className = 'text-base font-black';
+        btn.className = 'dur-btn p-2.5 sm:p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-yellow-300 text-center transition-all';
+        const activeTitle = btn.querySelector('div:first-child');
+        if (activeTitle) activeTitle.className = 'text-sm sm:text-base font-black';
         state.targetDuration = parseInt(btn.dataset.val);
       });
     });
@@ -1010,9 +1024,9 @@
     document.querySelectorAll('.count-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.count-btn').forEach(b => {
-          b.className = 'count-btn py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700';
+          b.className = 'count-btn py-2 sm:py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-bold text-neutral-300 hover:border-neutral-700';
         });
-        btn.className = 'count-btn py-2.5 rounded-xl border border-white bg-white text-black text-xs font-bold';
+        btn.className = 'count-btn py-2 sm:py-2.5 rounded-xl border border-white bg-white text-black text-xs font-bold';
         state.clipCount = parseInt(btn.dataset.count);
         document.getElementById('clipCountLabel').innerText = `${state.clipCount} Clips Selected`;
       });
@@ -1033,11 +1047,15 @@
     document.querySelectorAll('.theme-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.theme-btn').forEach(b => {
-          b.className = 'theme-btn p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700';
-          b.querySelector('div:first-child').className = 'text-xs font-bold text-neutral-200';
+          const isClean = b.dataset.theme === 'clean';
+          b.className = `theme-btn p-2.5 sm:p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-left transition-all hover:border-neutral-700 ${isClean ? 'col-span-2 sm:col-span-1' : ''}`;
+          const title = b.querySelector('div:first-child');
+          if (title) title.className = 'text-xs font-bold text-neutral-200';
         });
-        btn.className = 'theme-btn p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-left transition-all';
-        btn.querySelector('div:first-child').className = 'text-xs font-bold text-yellow-300';
+        const isClean = btn.dataset.theme === 'clean';
+        btn.className = `theme-btn p-2.5 sm:p-3 rounded-xl border border-yellow-400 bg-yellow-400/10 text-left transition-all ${isClean ? 'col-span-2 sm:col-span-1' : ''}`;
+        const activeTitle = btn.querySelector('div:first-child');
+        if (activeTitle) activeTitle.className = 'text-xs font-bold text-yellow-300';
         state.captionTheme = btn.dataset.theme;
       });
     });
