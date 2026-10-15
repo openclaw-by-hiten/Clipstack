@@ -56,9 +56,22 @@ def render_clip(
     if enable_grain:
         filters.append("noise=alls=8:allf=t+u")
 
-    # Windows explicit font paths to bypass fontconfig crashes
-    font_impact = "C\\:/Windows/Fonts/impact.ttf"
-    font_arial = "C\\:/Windows/Fonts/arial.ttf"
+    # Cross-platform font path detection for Windows & Linux / Colab
+    if os.name == "nt":
+        font_impact = "C\\:/Windows/Fonts/impact.ttf"
+        font_arial = "C\\:/Windows/Fonts/arial.ttf"
+        font_impact_opt = f":fontfile='{font_impact}'"
+        font_arial_opt = f":fontfile='{font_arial}'"
+    else:
+        # Linux / Colab font paths
+        font_impact = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+        font_arial = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+        if os.path.exists("/usr/share/fonts/truetype/msttcorefonts/impact.ttf"):
+            font_impact = "/usr/share/fonts/truetype/msttcorefonts/impact.ttf"
+        if os.path.exists("/usr/share/fonts/truetype/msttcorefonts/arial.ttf"):
+            font_arial = "/usr/share/fonts/truetype/msttcorefonts/arial.ttf"
+        font_impact_opt = f":fontfile='{font_impact}'" if os.path.exists(font_impact) else ""
+        font_arial_opt = f":fontfile='{font_arial}'" if os.path.exists(font_arial) else ""
 
     # 5. Header / Title Text (Sleek modern pill badge with opening hook visibility)
     if header_title:
@@ -68,7 +81,7 @@ def render_clip(
         filters.append(
             f"drawtext=text='{esc_title}':x=(w-text_w)/2:y=140:"
             f"fontsize=38:fontcolor=white:box=1:boxcolor=black@0.45:boxborderw=14:borderw=2:bordercolor=black:"
-            f"shadowcolor=black@0.8:shadowx=2:shadowy=2:fontfile='{font_impact}':enable='between(t,0,5)'"
+            f"shadowcolor=black@0.8:shadowx=2:shadowy=2{font_impact_opt}:enable='between(t,0,5)'"
         )
 
     # 6. Watermark Overlay (Anti-AI Dynamic Floating or Static)
@@ -96,13 +109,13 @@ def render_clip(
             )
             filters.append(
                 f"drawtext=text='{clean_wm}':x='{x_expr}':y='{y_expr}':"
-                f"fontsize=34:fontcolor=white@0.82:fontfile='{font_arial}':"
+                f"fontsize=34:fontcolor=white@0.82{font_arial_opt}:"
                 f"shadowcolor=black@0.8:shadowx=2:shadowy=2"
             )
         else:
             filters.append(
                 f"drawtext=text='{clean_wm}':x=w-text_w-40:y=h-text_h-60:"
-                f"fontsize=34:fontcolor=white@0.75:fontfile='{font_arial}':shadowcolor=black@0.8:shadowx=2:shadowy=2"
+                f"fontsize=34:fontcolor=white@0.75{font_arial_opt}:shadowcolor=black@0.8:shadowx=2:shadowy=2"
             )
 
     # 7. Animated Subtitles Burn-in via libass

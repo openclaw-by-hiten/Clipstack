@@ -416,7 +416,14 @@
         <input type="text" id="customBackendUrl" placeholder="e.g. https://your-domain.trycloudflare.com or http://localhost:8000" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-cyan-300 focus:outline-none focus:border-cyan-400 font-mono" />
         <p class="text-[10px] text-neutral-500">Leave empty to use default local server or GitHub Pages interactive demo mode.</p>
       </div>
-      <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 space-y-1">
+      <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-neutral-300">Cloud GPU Engine:</span>
+          <a href="https://colab.research.google.com/github/openclaw-by-hiten/Clipstack/blob/main/ClipStack_Cloud_Engine.ipynb" target="_blank" class="text-[10px] bg-amber-500/10 border border-amber-500/30 text-amber-300 px-2 py-0.5 rounded-lg hover:border-amber-400 flex items-center gap-1 font-semibold transition-all">
+            <span>⚡ Open in Colab</span>
+            <i data-lucide="external-link" class="w-3 h-3"></i>
+          </a>
+        </div>
         <div class="text-[11px] font-bold text-neutral-300 flex items-center gap-2">
           <span>Active Status:</span>
           <span id="backendModalStatusBadge" class="text-cyan-400 font-mono">GitHub Live Edition</span>

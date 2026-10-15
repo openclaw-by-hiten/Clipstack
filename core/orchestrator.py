@@ -214,6 +214,19 @@ class ClipPipelineOrchestrator:
 
             rendered_outputs.append(meta)
 
+        # Auto-cleanup heavy raw YouTube video & audio to preserve storage
+        if youtube_url:
+            if source_video and os.path.exists(source_video):
+                try:
+                    os.remove(source_video)
+                except Exception:
+                    pass
+            if audio_file and os.path.exists(audio_file):
+                try:
+                    os.remove(audio_file)
+                except Exception:
+                    pass
+
         emit(f"Complete! {len(rendered_outputs)} verified viral shorts exported to your library.", 100)
 
         return {

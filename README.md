@@ -1,13 +1,30 @@
 # ⚡ ClipStack — Neural AI Viral Clipper
 
 [![GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-yellow?style=for-the-badge&logo=github)](https://openclaw-by-hiten.github.io/Clipstack/)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/openclaw-by-hiten/Clipstack/blob/main/ClipStack_Cloud_Engine.ipynb)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-emerald?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 
 ClipStack is a high-performance AI video clipping studio powered by **Faster-Whisper** and **Meta TRIBE v2 Neural Brain-Attention Scoring**. It transforms long-form videos (YouTube URLs or local files) into viral, high-retention vertical shorts, reels, and TikToks with automated animated subtitles, anti-AI perimeter floating watermarks, 8K AI thumbnail generation, and multi-platform viral copy & publishing.
 
-🌐 **Live Web Studio:** [https://openclaw-by-hiten.github.io/Clipstack/](https://openclaw-by-hiten.github.io/Clipstack/)
+🌐 **Live Web Studio:** [https://openclaw-by-hiten.github.io/Clipstack/](https://openclaw-by-hiten.github.io/Clipstack/)  
+⚡ **1-Click Free Cloud GPU Engine:** [Open in Google Colab](https://colab.research.google.com/github/openclaw-by-hiten/Clipstack/blob/main/ClipStack_Cloud_Engine.ipynb)
+
+---
+
+## ⚡ 1-Click Free Cloud GPU Engine (Google Colab)
+
+Want to clip long YouTube videos without consuming local PC storage or GPU? Run ClipStack directly in Google Colab on Google's **Free NVIDIA T4 GPU** and **100 GB cloud disk**:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/openclaw-by-hiten/Clipstack/blob/main/ClipStack_Cloud_Engine.ipynb)
+
+### 3-Step Setup:
+1. **Open the Notebook**: Click the **Open in Colab** badge above.
+2. **Run All**: Ensure GPU is enabled (**Runtime** > **Change runtime type** > **T4 GPU**), then click **Runtime** > **Run all** (or press `Ctrl + F9`).
+3. **Connect to Web App**: Cell 3 will start a secure Cloudflare tunnel and output your live backend URL (e.g. `https://xxxx.trycloudflare.com`). Copy it, open [https://openclaw-by-hiten.github.io/Clipstack/](https://openclaw-by-hiten.github.io/Clipstack/), click **Backend** in the top right header, and paste it!
+
+*(All video downloads, Whisper transcription, and FFmpeg rendering happen completely in the cloud. 0 MB of disk space is used on your personal computer!)*
 
 ---
 
