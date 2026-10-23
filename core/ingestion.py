@@ -1,22 +1,47 @@
 import os
+import time
+import shutil
 import subprocess
 import yt_dlp
 from pathlib import Path
 from core.config import WORKSPACE_DIR
 
-NODE_EXE = r"C:\Program Files\nodejs\node.exe"
+# Cross-platform Node.js binary detection for JS challenge solving (Windows & Colab / Linux)
+if os.name == "nt" and os.path.exists(r"C:\Program Files\nodejs\node.exe"):
+    NODE_BIN = r"C:\Program Files\nodejs\node.exe"
+else:
+    NODE_BIN = shutil.which("node")
+
+# Session cache for YouTube metadata & stream URLs (prevents duplicate 3-second network extractions)
+_YOUTUBE_INFO_CACHE = {}
 
 def get_base_ydl_opts() -> dict:
-    """Returns resilient base options configuring Node.js JS challenge solver."""
+    """Returns resilient base options configuring Node.js JS challenge solver if available."""
     opts = {
         'quiet': True,
         'no_warnings': True,
         'overwrites': True,
     }
-    if os.path.exists(NODE_EXE):
-        opts['js_runtimes'] = {'node': {'path': NODE_EXE}}
+    if NODE_BIN and os.path.exists(NODE_BIN):
+        opts['js_runtimes'] = {'node': {'path': NODE_BIN}}
         opts['remote_components'] = ['ejs:github']
     return opts
+
+def get_youtube_info(url: str) -> dict:
+    """Fetches and caches YouTube video metadata and direct streaming URLs for 1 hour."""
+    now = time.time()
+    if url in _YOUTUBE_INFO_CACHE:
+        entry_time, data = _YOUTUBE_INFO_CACHE[url]
+        if now - entry_time < 3600:
+            return data
+
+    ydl_opts = get_base_ydl_opts()
+    ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best'
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+
+    _YOUTUBE_INFO_CACHE[url] = (now, info)
+    return info
 
 def get_media_duration(file_path: str) -> float:
     """Uses ffprobe to return the exact duration of a media file in seconds."""
@@ -42,12 +67,10 @@ def download_youtube_audio_only(url: str, progress_callback=None) -> dict:
     if progress_callback:
         progress_callback("Connecting to YouTube: Fetching metadata & audio stream only...")
 
-    ydl_opts = get_base_ydl_opts()
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        video_id = info.get("id", "yt_video")
-        title = info.get("title", "YouTube Video")
-        duration = float(info.get("duration", 0.0))
+    info = get_youtube_info(url)
+    video_id = info.get("id", "yt_video")
+    title = info.get("title", "YouTube Video")
+    duration = float(info.get("duration", 0.0))
 
     raw_audio_template = str(WORKSPACE_DIR / f"{video_id}_temp_audio.%(ext)s")
     target_wav_path = str(WORKSPACE_DIR / f"{video_id}_audio.wav")
@@ -106,17 +129,47 @@ def download_youtube_audio_only(url: str, progress_callback=None) -> dict:
 def download_youtube_video_section(url: str, start_sec: float, end_sec: float, output_path: str, progress_callback=None) -> str:
     """
     STEP 3: Downloads ONLY the specific 30s-180s section of video from YouTube
-    using HTTP Range Requests with Node challenge solver (Zero full-video download!).
+    in ~5-15 seconds using high-speed HTTP byte-range seek via FFmpeg (Zero full-video download!).
     """
+    duration = max(1.0, end_sec - start_sec)
     if progress_callback:
         progress_callback(f"Streaming on-demand video slice [{int(start_sec)}s - {int(end_sec)}s] from YouTube...")
 
+    try:
+        info = get_youtube_info(url)
+        formats = info.get("requested_formats") or [info]
+        video_url = formats[0].get("url")
+        audio_url = formats[1].get("url") if len(formats) > 1 else video_url
+
+        if video_url:
+            cmd = [
+                "ffmpeg", "-y",
+                "-ss", str(start_sec),
+                "-t", str(duration),
+                "-i", video_url,
+                "-ss", str(start_sec),
+                "-t", str(duration),
+                "-i", audio_url,
+                "-c:v", "libx264",
+                "-preset", "ultrafast",
+                "-crf", "22",
+                "-c:a", "aac",
+                "-b:a", "128k",
+                "-movflags", "+faststart",
+                output_path
+            ]
+            res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 10000:
+                return output_path
+    except Exception as e:
+        print(f"[StreamSeek] Fast seek error ({e}). Trying fallback range download...")
+
+    # Fallback to direct yt-dlp section download without the slow force_keyframes_at_cuts
     ydl_opts = get_base_ydl_opts()
     ydl_opts.update({
-        'format': 'bv*[height<=1080]+ba/b',
+        'format': 'bestvideo[height<=720]+bestaudio/best[height<=720]/best',
         'outtmpl': output_path,
         'download_ranges': yt_dlp.utils.download_range_func(None, [(start_sec, end_sec)]),
-        'force_keyframes_at_cuts': True
     })
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:

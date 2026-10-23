@@ -4,7 +4,7 @@ import urllib.request
 import torch
 from faster_whisper import WhisperModel
 from core.config import CACHE_DIR
-from core.ingestion import get_base_ydl_opts
+from core.ingestion import get_base_ydl_opts, get_youtube_info
 import yt_dlp
 
 def fetch_youtube_instant_subtitles(url: str, preferred_lang: str = "en") -> dict:
@@ -13,11 +13,9 @@ def fetch_youtube_instant_subtitles(url: str, preferred_lang: str = "en") -> dic
     in under 1 second (bypasses heavy 3-minute CPU transcription for 1-hour videos!).
     """
     try:
-        ydl_opts = get_base_ydl_opts()
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            subs = info.get("subtitles", {})
-            auto_subs = info.get("automatic_captions", {})
+        info = get_youtube_info(url)
+        subs = info.get("subtitles", {})
+        auto_subs = info.get("automatic_captions", {})
 
         all_subs = {**auto_subs, **subs}
         if not all_subs:
