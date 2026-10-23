@@ -243,7 +243,7 @@
           <!-- Logo Preview & Upload Trigger -->
           <div class="relative shrink-0 group">
             <div class="w-16 h-16 rounded-2xl border-2 border-cyan-400/60 bg-neutral-950 overflow-hidden shadow-lg relative flex items-center justify-center">
-              <img id="brandLogoImg" src="/api/branding/logo" alt="Channel Logo" class="w-full h-full object-cover" onerror="this.src='./workspace/branding/logo.png';" />
+              <img id="brandLogoImg" src="/api/branding/logo" alt="Channel Logo" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='./workspace/branding/logo.png';" />
             </div>
             <label for="brandLogoUpload" class="absolute -bottom-1 -right-1 bg-cyan-500 hover:bg-cyan-400 text-black p-1.5 rounded-xl cursor-pointer shadow-md transition-all hover:scale-110 flex items-center justify-center" title="Click to upload/change logo">
               <i data-lucide="camera" class="w-3.5 h-3.5"></i>
@@ -467,7 +467,7 @@
       <div class="p-3.5 sm:p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
         <!-- Clip summary pill -->
         <div class="flex items-center gap-3 p-3 bg-neutral-950 rounded-xl border border-neutral-800">
-          <img id="pubClipThumb" src="" class="w-12 h-16 object-cover rounded-lg border border-neutral-700 bg-neutral-900 shrink-0" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
+          <img id="pubClipThumb" src="" class="w-12 h-16 object-cover rounded-lg border border-neutral-700 bg-neutral-900 shrink-0" onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
           <div class="flex-1 min-w-0">
             <div id="pubClipTitle" class="font-bold text-white text-xs truncate">Clip Title</div>
             <div class="text-[11px] text-neutral-400 flex items-center gap-2 mt-1 flex-wrap">
@@ -739,7 +739,7 @@
       <!-- Clip Header Summary Banner -->
       <div class="px-3.5 sm:px-6 py-2.5 sm:py-3 bg-neutral-950/60 border-b border-neutral-800/80 flex items-center justify-between flex-wrap gap-2.5">
         <div class="flex items-center gap-3 min-w-0">
-          <img id="vcClipThumb" src="" class="w-10 h-14 object-cover rounded-lg border border-neutral-800 bg-neutral-900 shrink-0" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
+          <img id="vcClipThumb" src="" class="w-10 h-14 object-cover rounded-lg border border-neutral-800 bg-neutral-900 shrink-0" onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
           <div class="min-w-0">
             <div id="vcClipTitle" class="text-xs font-bold text-white truncate max-w-xs sm:max-w-md">Clip Title</div>
             <div class="text-[11px] text-neutral-400 flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
@@ -1069,7 +1069,7 @@
       const formData = new FormData();
       formData.append('file', file);
       try {
-        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const res = await fetch(apiUrl('/api/upload'), { method: 'POST', body: formData });
         const data = await res.json();
         state.uploadedFile = data.file_path;
         document.getElementById('fileLabel').innerText = `Uploaded: ${file.name}`;
@@ -1425,7 +1425,8 @@
     }
 
     function renderClipCards(clipsList) {
-      const grid = document.getElementById('clipsGrid');
+      try {
+        const grid = document.getElementById('clipsGrid');
       grid.innerHTML = '';
       if (!clipsList || clipsList.length === 0) {
         grid.innerHTML = `<div class="col-span-full text-center py-10 text-neutral-600 text-xs">No clips available.</div>`;
@@ -1439,7 +1440,7 @@
         const thumbUrl = clip.thumb_url.startsWith('http') || clip.thumb_url.startsWith('.') ? clip.thumb_url : apiUrl(clip.thumb_url);
           card.innerHTML = `
             <div class="relative aspect-[9/16] bg-black overflow-hidden cursor-pointer preview-trigger" data-url="${vidUrl}">
-              <img src="${thumbUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
+              <img src="${thumbUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
               <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <div class="w-12 h-12 rounded-full bg-white/90 text-black flex items-center justify-center shadow-lg font-bold">▶</div>
               </div>
@@ -1527,7 +1528,7 @@
               e.stopPropagation();
               rebrandBtn.innerHTML = '<i data-lucide="loader" class="w-2.5 h-2.5 animate-spin"></i>';
               try {
-                await fetch(`/api/branding/rebrand-clip/${clip.id}`, { method: 'POST' });
+                await fetch(apiUrl(`/api/branding/rebrand-clip/${clip.id}`), { method: 'POST' });
                 appendLog(`Applied brand logo to ${clip.id} thumbnail.`, 'text-cyan-400 font-bold');
                 loadClips();
               } catch (err) {
@@ -1619,7 +1620,7 @@
 
       try {
         appendLog(`Deleting clip ${clipId} from device storage...`, 'text-red-400');
-        const res = await fetch(`/api/clips/${clipId}`, { method: 'DELETE' });
+        const res = await fetch(apiUrl(`/api/clips/${clipId}`), { method: 'DELETE' });
         const data = await res.json();
         
         if (res.ok && data.status === 'success') {
@@ -1652,7 +1653,7 @@
     if (copyExportsFolderBtn) {
       copyExportsFolderBtn.addEventListener('click', async () => {
         try {
-          const res = await fetch('/api/locate-folder');
+          const res = await fetch(apiUrl('/api/locate-folder'));
           const data = await res.json();
           await copyPathToClipboard(data.folder_path, copyExportsFolderBtn, 'Exports Folder Path');
         } catch (err) {
@@ -1692,7 +1693,7 @@
 
     async function fetchClipPath(clipId) {
       try {
-        const res = await fetch(`/api/locate/${clipId}`);
+        const res = await fetch(apiUrl(`/api/locate/${clipId}`));
         return await res.json();
       } catch (e) {
         return { video_path: '', thumb_path: '', folder_path: '' };
@@ -1749,7 +1750,7 @@
         if (!currentViralCopyClip) return;
         let p = currentViralCopyClip.folder_path;
         if (!p) {
-          const res = await fetch('/api/locate-folder');
+          const res = await fetch(apiUrl('/api/locate-folder'));
           const data = await res.json();
           p = data.folder_path;
         }
@@ -2089,7 +2090,7 @@
       };
 
       try {
-        const res = await fetch('/api/social/publish', {
+        const res = await fetch(apiUrl('/api/social/publish'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -2158,7 +2159,7 @@
 
     async function refreshBrowserStatus() {
       try {
-        const res = await fetch('/api/social/browser-status');
+        const res = await fetch(apiUrl('/api/social/browser-status'));
         const data = await res.json();
 
         // Update YouTube
@@ -2300,7 +2301,7 @@
 
     async function triggerDisconnect(platform) {
       try {
-        await fetch('/api/social/disconnect-browser', {
+        await fetch(apiUrl('/api/social/disconnect-browser'), {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ platform })
@@ -2324,7 +2325,7 @@
     document.getElementById('openSocialSettingsBtn').addEventListener('click', async () => {
       try {
         await refreshBrowserStatus();
-        const res = await fetch('/api/social/config');
+        const res = await fetch(apiUrl('/api/social/config'));
         const cfg = await res.json();
         document.getElementById('cfgWhEnabled').checked = cfg.webhook?.enabled || false;
         document.getElementById('cfgWhUrl').value = cfg.webhook?.url || '';
@@ -2345,7 +2346,7 @@
       };
 
       try {
-        const res = await fetch('/api/social/config', {
+        const res = await fetch(apiUrl('/api/social/config'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ config })
@@ -2370,7 +2371,7 @@
 
     document.getElementById('openPublishHistoryBtn').addEventListener('click', async () => {
       try {
-        const res = await fetch('/api/social/history');
+        const res = await fetch(apiUrl('/api/social/history'));
         const data = await res.json();
         const container = document.getElementById('historyListContainer');
         container.innerHTML = '';
@@ -2431,10 +2432,11 @@
     const saveBrandingBtn = document.getElementById('saveBrandingBtn');
     const brandLogoPosition = document.getElementById('brandLogoPosition');
     const brandLogoSize = document.getElementById('brandLogoSize');
+    const watermarkInput = document.getElementById('watermark');
 
     async function loadBrandingProfile() {
       try {
-        const res = await fetch('/api/branding');
+        const res = await fetch(apiUrl('/api/branding'));
         if (!res.ok) return;
         const data = await res.json();
         if (data.channel_handle) {
@@ -2483,7 +2485,7 @@
       saveBrandingBtn.disabled = true;
       saveBrandingBtn.innerHTML = '<i data-lucide="loader" class="w-3 h-3 animate-spin"></i> Saving...';
       try {
-        const res = await fetch('/api/branding', {
+        const res = await fetch(apiUrl('/api/branding'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -2522,7 +2524,7 @@
       const formData = new FormData();
       formData.append('file', file);
       try {
-        const res = await fetch('/api/branding/logo', {
+        const res = await fetch(apiUrl('/api/branding/logo'), {
           method: 'POST',
           body: formData
         });
