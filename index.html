@@ -1091,6 +1091,30 @@
     // Environment & Backend Configuration (Supports Localhost & GitHub Pages)
     const isGitHubPages = window.location.hostname.endsWith('github.io');
     let apiBaseUrl = localStorage.getItem('clipstack_api_url') || '';
+    let backendHealth = apiBaseUrl ? 'checking' : 'ready';
+
+    // Auto-detect ?backend= query parameter (e.g. 1-click launch from Google Colab)
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const backendQuery = urlParams.get('backend');
+      if (backendQuery) {
+        let clean = backendQuery.trim().replace(/\/+$/, '');
+        if (clean && !clean.startsWith('http://') && !clean.startsWith('https://')) {
+          clean = 'https://' + clean;
+        }
+        if (clean) {
+          apiBaseUrl = clean;
+          localStorage.setItem('clipstack_api_url', apiBaseUrl);
+          backendHealth = 'checking';
+          try {
+            const cleanPath = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanPath);
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse backend query param:", e);
+    }
 
     function apiUrl(path) {
       if (!apiBaseUrl) return path;
@@ -1108,14 +1132,35 @@
       if (!btn || !text || !dot) return;
 
       if (apiBaseUrl) {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
-        text.innerText = 'Engine Connected';
-        btn.className = 'text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full flex items-center gap-2 cursor-pointer hover:bg-emerald-500/20 transition-all';
-        if (badge) {
-          badge.className = 'text-emerald-400 font-mono';
-          badge.innerText = `Connected (${apiBaseUrl})`;
+        if (backendHealth === 'connected') {
+          dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+          text.innerText = 'Engine Connected';
+          btn.className = 'text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full flex items-center gap-2 cursor-pointer hover:bg-emerald-500/20 transition-all';
+          if (badge) {
+            badge.className = 'text-emerald-400 font-mono';
+            badge.innerText = `Connected (${apiBaseUrl})`;
+          }
+          if (detail) detail.innerText = 'Connected to remote backend. Real video generation active.';
+        } else if (backendHealth === 'offline') {
+          dot.className = 'w-2 h-2 rounded-full bg-rose-500 animate-ping';
+          text.innerText = '⚠️ Engine Offline (Click to Fix)';
+          btn.className = 'text-xs text-rose-300 bg-rose-500/20 border border-rose-500/50 px-3 py-1.5 rounded-full flex items-center gap-2 cursor-pointer hover:bg-rose-500/30 transition-all shadow-[0_0_12px_rgba(244,63,94,0.35)]';
+          if (badge) {
+            badge.className = 'text-rose-400 font-mono font-bold';
+            badge.innerText = `Offline / Expired (${apiBaseUrl})`;
+          }
+          if (detail) detail.innerHTML = '<span class="text-rose-400 font-bold">⚠️ Backend unreachable:</span> Your previous Colab session may have ended or changed URL. Run the notebook and paste the new Cloudflare link below.';
+        } else {
+          // checking
+          dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+          text.innerText = 'Checking Engine...';
+          btn.className = 'text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full flex items-center gap-2 cursor-pointer hover:bg-amber-500/20 transition-all';
+          if (badge) {
+            badge.className = 'text-amber-400 font-mono';
+            badge.innerText = `Verifying (${apiBaseUrl})`;
+          }
+          if (detail) detail.innerText = 'Testing connection to backend engine...';
         }
-        if (detail) detail.innerText = 'Connected to remote backend. Real video generation active.';
       } else if (isGitHubPages) {
         dot.className = 'w-2 h-2 rounded-full bg-cyan-400 animate-pulse';
         text.innerText = '🌐 GitHub Live Edition';
@@ -1150,6 +1195,7 @@
 
     if (engineStatusBtn) {
       engineStatusBtn.addEventListener('click', () => {
+        if (customBackendUrl) customBackendUrl.value = apiBaseUrl;
         if (backendModal) backendModal.classList.remove('hidden');
       });
     }
@@ -1164,8 +1210,10 @@
         apiBaseUrl = url;
         if (url) {
           localStorage.setItem('clipstack_api_url', url);
+          backendHealth = 'checking';
         } else {
           localStorage.removeItem('clipstack_api_url');
+          backendHealth = 'ready';
         }
         updateBackendStatusUI();
         if (backendModal) backendModal.classList.add('hidden');
@@ -1177,6 +1225,7 @@
     if (resetBackendBtn) {
       resetBackendBtn.addEventListener('click', () => {
         apiBaseUrl = '';
+        backendHealth = 'ready';
         localStorage.removeItem('clipstack_api_url');
         if (customBackendUrl) customBackendUrl.value = '';
         updateBackendStatusUI();
@@ -1238,6 +1287,12 @@
       if (isGitHubPages && !apiBaseUrl) {
         appendLog('Live Web Edition: Connect a backend engine or run locally to process YouTube videos with Whisper & FFmpeg.', 'text-amber-400 font-bold');
         alert("⚡ Live Web Edition:\n\nVideo clipping with AI Whisper & FFmpeg requires a running backend or local GPU.\n\n• To connect a remote or local engine, click '🌐 GitHub Live Edition' in the top header.\n• Or test the interactive sample clips, 8K thumbnails, and viral copy hub below!");
+        return;
+      }
+
+      if (apiBaseUrl && backendHealth === 'offline') {
+        alert(`⚠️ Backend Engine Offline:\n\nCannot reach ${apiBaseUrl}.\n\nIf you restarted Google Colab, please copy the new trycloudflare.com URL from Cell 3 and update your Backend URL.`);
+        if (backendModal) backendModal.classList.remove('hidden');
         return;
       }
 
@@ -1335,9 +1390,16 @@
     // Load Clips Library
     async function loadClips() {
       try {
-        const res = await fetch(apiUrl('/api/clips'));
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 7000);
+        const res = await fetch(apiUrl('/api/clips'), { signal: controller.signal });
+        clearTimeout(timeoutId);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
+        if (apiBaseUrl) {
+          backendHealth = 'connected';
+          updateBackendStatusUI();
+        }
         const grid = document.getElementById('clipsGrid');
         grid.innerHTML = '';
 
@@ -1353,6 +1415,11 @@
         renderClipCards(data.clips);
       } catch (err) {
         console.warn("Could not load backend clips, showing interactive showcase clips:", err);
+        if (apiBaseUrl) {
+          backendHealth = 'offline';
+          updateBackendStatusUI();
+          appendLog(`⚠️ Cannot reach backend (${apiBaseUrl}). Click 'Engine Offline' to paste your new Colab link.`, 'text-rose-400 font-bold');
+        }
         renderClipCards(getSampleClips());
       }
     }
