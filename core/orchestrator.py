@@ -215,15 +215,15 @@ class ClipPipelineOrchestrator:
             rendered_outputs.append(meta)
 
         # Auto-cleanup heavy raw YouTube video & audio to preserve storage
-        if youtube_url:
-            if source_video and os.path.exists(source_video):
+        if yt_url:
+            if local_video_path and os.path.exists(local_video_path):
                 try:
-                    os.remove(source_video)
+                    os.remove(local_video_path)
                 except Exception:
                     pass
-            if audio_file and os.path.exists(audio_file):
+            if audio_path and os.path.exists(audio_path):
                 try:
-                    os.remove(audio_file)
+                    os.remove(audio_path)
                 except Exception:
                     pass
 

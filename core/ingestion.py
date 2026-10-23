@@ -150,6 +150,8 @@ def download_youtube_video_section(url: str, start_sec: float, end_sec: float, o
                 "-ss", str(start_sec),
                 "-t", str(duration),
                 "-i", audio_url,
+                "-map", "0:v:0",
+                "-map", "1:a:0",
                 "-c:v", "libx264",
                 "-preset", "ultrafast",
                 "-crf", "22",
@@ -159,7 +161,7 @@ def download_youtube_video_section(url: str, start_sec: float, end_sec: float, o
                 output_path
             ]
             res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
-            if os.path.exists(output_path) and os.path.getsize(output_path) > 10000:
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 50000:
                 return output_path
     except Exception as e:
         print(f"[StreamSeek] Fast seek error ({e}). Trying fallback range download...")
