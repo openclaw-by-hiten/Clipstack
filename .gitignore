@@ -36,6 +36,7 @@ workspace/publish_history.json
 workspace/browser_profiles/
 workspace/test_launch/
 workspace/test_profile/
+workspace/archive_clips/
 
 # Temporary Scratch Scripts & Output
 scratch/
