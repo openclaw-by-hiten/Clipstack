@@ -37,11 +37,18 @@ def render_clip(
     """
     filters = []
 
-    # 1. Aspect Ratio Reframing
-    if aspect_ratio == "9:16":
-        filters.append("crop='min(iw,ih*9/16)':'min(ih,iw*16/9)':(iw-ow)/2:(ih-oh)/2,scale=1080:1920:flags=lanczos")
-    elif aspect_ratio == "1:1":
-        filters.append("crop='min(iw,ih)':'min(iw,ih)':(iw-ow)/2:(ih-oh)/2,scale=1080:1080:flags=lanczos")
+    # 1. Aspect Ratio Reframing (Face-Aware Smart Auto-Framing)
+    if aspect_ratio in ["9:16", "1:1"]:
+        try:
+            from core.smart_crop import generate_smart_crop_filter
+            crop_filter = generate_smart_crop_filter(source_video, clip_duration, aspect_ratio)
+            filters.append(crop_filter)
+        except Exception as e:
+            print(f"[Renderer] Smart crop fallback: {e}")
+            if aspect_ratio == "9:16":
+                filters.append("crop='min(iw,ih*9/16)':'min(ih,iw*16/9)':(iw-ow)/2:(ih-oh)/2,scale=1080:1920:flags=lanczos")
+            else:
+                filters.append("crop='min(iw,ih)':'min(iw,ih)':(iw-ow)/2:(ih-oh)/2,scale=1080:1080:flags=lanczos")
     else:  # 16:9
         filters.append("scale=1920:1080:flags=lanczos")
 
