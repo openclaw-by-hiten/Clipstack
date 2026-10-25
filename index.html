@@ -243,7 +243,7 @@
           <!-- Logo Preview & Upload Trigger -->
           <div class="relative shrink-0 group">
             <div class="w-16 h-16 rounded-2xl border-2 border-cyan-400/60 bg-neutral-950 overflow-hidden shadow-lg relative flex items-center justify-center">
-              <img id="brandLogoImg" src="/api/branding/logo" alt="Channel Logo" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='./workspace/branding/logo.png';" />
+              <img id="brandLogoImg" src="./workspace/branding/logo.png" alt="Channel Logo" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='./workspace/branding/logo.png';" />
             </div>
             <label for="brandLogoUpload" class="absolute -bottom-1 -right-1 bg-cyan-500 hover:bg-cyan-400 text-black p-1.5 rounded-xl cursor-pointer shadow-md transition-all hover:scale-110 flex items-center justify-center" title="Click to upload/change logo">
               <i data-lucide="camera" class="w-3.5 h-3.5"></i>
@@ -2477,8 +2477,14 @@
           brandEmbedToggle.checked = data.embed_logo_on_thumbnail;
         }
         if (data.logo_url) {
-          brandLogoImg.src = `${data.logo_url}?t=${Date.now()}`;
+          brandLogoImg.src = `${apiUrl(data.logo_url)}?t=${Date.now()}`;
+        } else {
+          brandLogoImg.src = './workspace/branding/logo.png';
         }
+        brandLogoImg.onerror = () => {
+          brandLogoImg.onerror = null;
+          brandLogoImg.src = './workspace/branding/logo.png';
+        };
       } catch (err) {
         console.warn('Could not load branding profile:', err);
       }
@@ -2541,7 +2547,11 @@
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        brandLogoImg.src = `${data.logo_url}&t=${Date.now()}`;
+        brandLogoImg.src = `${apiUrl(data.logo_url)}&t=${Date.now()}`;
+        brandLogoImg.onerror = () => {
+          brandLogoImg.onerror = null;
+          brandLogoImg.src = './workspace/branding/logo.png';
+        };
         appendLog('Brand logo uploaded & active! Thumbnails will now use this logo.', 'text-emerald-400 font-bold');
         loadClips();
       } catch (err) {
