@@ -51,6 +51,8 @@ def get_base_ydl_opts() -> dict:
         Path("/content/cookies.txt"),
         Path("/content/Clipstack/cookies.txt"),
         Path("/content/Clipstack/workspace/cookies.txt"),
+        Path("/content/drive/MyDrive/cookies.txt"),
+        Path("/content/drive/MyDrive/ClipStack/cookies.txt"),
     ]
     for cp in cookie_candidates:
         if cp.exists() and cp.stat().st_size > 0:
