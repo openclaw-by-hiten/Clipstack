@@ -155,9 +155,9 @@ async def list_clips():
     return {"clips": clips, "folder_path": exports_abs}
 
 
-def _iter_file_range(file_path: Path, start: int, end: int, chunk_size: int = 262144):
-    """Yields fixed-size byte chunks for smooth zero-buffer HTTP 206 video streaming."""
-    with open(file_path, "rb") as f:
+def _iter_file_range(file_path: Path, start: int, end: int, chunk_size: int = 2097152):
+    """Yields high-throughput multi-megabyte chunks with 4MB OS read-ahead for 100Mbps+ zero-lag streaming."""
+    with open(file_path, "rb", buffering=4 * 1024 * 1024) as f:
         f.seek(start)
         remaining = end - start + 1
         while remaining > 0:
@@ -169,31 +169,27 @@ def _iter_file_range(file_path: Path, start: int, end: int, chunk_size: int = 26
             yield chunk
 
 
-@app.api_route("/api/stream/{filename}", methods=["GET", "HEAD"])
-async def stream_media(filename: str, request: Request):
-    safe_name = Path(filename).name
-    file_path = EXPORTS_DIR / safe_name
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="File not found")
-
-    if not safe_name.lower().endswith(".mp4"):
-        media_type = "image/png" if safe_name.lower().endswith(".png") else "image/jpeg"
-        return FileResponse(
-            path=str(file_path),
-            media_type=media_type,
-            headers={"Cache-Control": "public, max-age=3600"},
-        )
-
+def _serve_ranged_file(
+    file_path: Path,
+    request: Request,
+    media_type: str,
+    chunk_size: int,
+    extra_headers: dict | None = None,
+):
+    """Serves full or HTTP 206 Partial Content byte-ranges for multi-stream parallel buffering & downloads."""
     file_size = file_path.stat().st_size
     base_headers = {
         "Accept-Ranges": "bytes",
         "Cache-Control": "public, max-age=86400",
+        "X-Accel-Buffering": "no",
     }
+    if extra_headers:
+        base_headers.update(extra_headers)
 
     if request.method == "HEAD":
         return Response(
             status_code=200,
-            media_type="video/mp4",
+            media_type=media_type,
             headers={**base_headers, "Content-Length": str(file_size)},
         )
 
@@ -213,7 +209,7 @@ async def stream_media(filename: str, request: Request):
             if start >= file_size or start < 0:
                 return Response(
                     status_code=416,
-                    headers={"Content-Range": f"bytes */{file_size}"},
+                    headers={**base_headers, "Content-Range": f"bytes */{file_size}"},
                 )
             end = min(end, file_size - 1)
             content_length = end - start + 1
@@ -223,17 +219,40 @@ async def stream_media(filename: str, request: Request):
                 "Content-Length": str(content_length),
             }
             return StreamingResponse(
-                _iter_file_range(file_path, start, end, chunk_size=262144),
+                _iter_file_range(file_path, start, end, chunk_size=chunk_size),
                 status_code=206,
-                media_type="video/mp4",
+                media_type=media_type,
                 headers=headers,
             )
 
     return StreamingResponse(
-        _iter_file_range(file_path, 0, max(0, file_size - 1), chunk_size=262144),
+        _iter_file_range(file_path, 0, max(0, file_size - 1), chunk_size=chunk_size),
         status_code=200,
-        media_type="video/mp4",
+        media_type=media_type,
         headers={**base_headers, "Content-Length": str(file_size)},
+    )
+
+
+@app.api_route("/api/stream/{filename}", methods=["GET", "HEAD"])
+async def stream_media(filename: str, request: Request):
+    safe_name = Path(filename).name
+    file_path = EXPORTS_DIR / safe_name
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if not safe_name.lower().endswith(".mp4"):
+        media_type = "image/png" if safe_name.lower().endswith(".png") else "image/jpeg"
+        return FileResponse(
+            path=str(file_path),
+            media_type=media_type,
+            headers={"Cache-Control": "public, max-age=3600"},
+        )
+
+    return _serve_ranged_file(
+        file_path=file_path,
+        request=request,
+        media_type="video/mp4",
+        chunk_size=2 * 1024 * 1024,  # 2 MB high-throughput stream buffer
     )
 
 
@@ -244,22 +263,13 @@ async def download_clip(filename: str, request: Request):
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
 
-    file_size = file_path.stat().st_size
     media_type = "video/mp4" if safe_name.lower().endswith(".mp4") else "application/octet-stream"
-    headers = {
-        "Content-Disposition": f'attachment; filename="{safe_name}"',
-        "Content-Length": str(file_size),
-        "Accept-Ranges": "bytes",
-        "Cache-Control": "public, max-age=86400",
-    }
-    if request.method == "HEAD":
-        return Response(status_code=200, media_type=media_type, headers=headers)
-
-    return StreamingResponse(
-        _iter_file_range(file_path, 0, max(0, file_size - 1), chunk_size=524288),
-        status_code=200,
+    return _serve_ranged_file(
+        file_path=file_path,
+        request=request,
         media_type=media_type,
-        headers=headers,
+        chunk_size=4 * 1024 * 1024,  # 4 MB turbo download buffer + HTTP 206 parallel chunk support
+        extra_headers={"Content-Disposition": f'attachment; filename="{safe_name}"'},
     )
 
 @app.delete("/api/clips/{clip_id}")
@@ -703,4 +713,11 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     print(f"[Server] Starting Neural Clip Studio on http://0.0.0.0:{port}")
-    uvicorn.run("server:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run(
+        "server:app",
+        host="0.0.0.0",
+        port=port,
+        reload=False,
+        limit_concurrency=128,
+        timeout_keep_alive=65,
+    )
