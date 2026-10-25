@@ -1,4 +1,7 @@
 import os
+os.environ['YTDLP_NO_PLUGINS'] = '1'
+
+import os
 import json
 import time
 import asyncio

@@ -1,4 +1,23 @@
 import os
+import sys
+
+# Permanently block any broken/conflicting yt-dlp plugins (such as yt-dlp-youtube-oauth2)
+os.environ['YTDLP_NO_PLUGINS'] = '1'
+
+# Auto-purge yt-dlp-youtube-oauth2 if installed in the environment
+try:
+    import importlib.util
+    if importlib.util.find_spec('yt_dlp_plugins'):
+        import subprocess
+        subprocess.run(
+            [sys.executable, '-m', 'pip', 'uninstall', '-y', 'yt-dlp-youtube-oauth2'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+except Exception:
+    pass
+
+import os
 import time
 import shutil
 import subprocess
