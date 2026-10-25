@@ -1,6 +1,7 @@
 fastapi>=0.115.0
 uvicorn>=0.30.0
-yt-dlp>=2024.10.21
+yt-dlp>=2025.01.01
+pysocks>=1.7.1
 faster-whisper>=1.0.0
 numpy>=1.26.0
 librosa>=0.10.2

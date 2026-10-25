@@ -1,9 +1,11 @@
 FROM python:3.11-slim
 
-# Install system dependencies including FFmpeg
+# Install system dependencies including FFmpeg, certs, and caption fonts
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libsndfile1 \
+    fonts-dejavu-core \
+    ca-certificates \
     git \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -17,7 +19,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project code and assets
 COPY . .
 
-# Environment port (defaults to 7860 for Hugging Face Spaces or PORT from Render/Cloud Run)
+# Environment configuration
+ENV YTDLP_NO_PLUGINS=1
 ENV PORT=7860
 EXPOSE 7860
 

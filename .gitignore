@@ -21,6 +21,7 @@ exports/*
 workspace/*.mp4
 workspace/*.wav
 workspace/*.webm
+workspace/*.m4a
 workspace/*.part
 workspace/*.ass
 workspace/*.mkv
@@ -32,7 +33,10 @@ workspace/source_*
 workspace/thumb_*
 workspace/publish_history.json
 
-# Browser Session Profiles & Cookies
+# Browser Session Profiles, Cookies & WARP Shield Binaries/Keys
+cookies.txt
+workspace/cookies.txt
+workspace/warp_shield/
 workspace/browser_profiles/
 workspace/test_launch/
 workspace/test_profile/

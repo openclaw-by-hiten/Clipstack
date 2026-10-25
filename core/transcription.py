@@ -4,12 +4,12 @@ import urllib.request
 import torch
 from faster_whisper import WhisperModel
 from core.config import CACHE_DIR
-from core.ingestion import get_base_ydl_opts, get_youtube_info
-import yt_dlp
+from core.ingestion import get_youtube_info
+
 
 def fetch_youtube_instant_subtitles(url: str, preferred_lang: str = "en") -> dict:
     """
-    Lightning-fast extraction: Fetches official or auto-generated YouTube timed subtitles 
+    Lightning-fast extraction: Fetches official or auto-generated YouTube timed subtitles
     in under 1 second (bypasses heavy 3-minute CPU transcription for 1-hour videos!).
     """
     try:
@@ -22,17 +22,29 @@ def fetch_youtube_instant_subtitles(url: str, preferred_lang: str = "en") -> dic
             return None
 
         # Pick language
-        lang_key = preferred_lang if preferred_lang in all_subs else ("en" if "en" in all_subs else list(all_subs.keys())[0])
+        lang_key = (
+            preferred_lang
+            if preferred_lang in all_subs
+            else ("en" if "en" in all_subs else list(all_subs.keys())[0])
+        )
         sub_formats = all_subs.get(lang_key, [])
         json3_entry = next((s for s in sub_formats if s.get("ext") == "json3"), None)
         if not json3_entry:
             return None
 
+        active_proxy = info.get("_active_proxy")
         req = urllib.request.Request(json3_entry["url"], headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req) as resp:
+        if active_proxy:
+            opener = urllib.request.build_opener(
+                urllib.request.ProxyHandler({"http": active_proxy, "https": active_proxy})
+            )
+            resp_ctx = opener.open(req, timeout=15)
+        else:
+            resp_ctx = urllib.request.urlopen(req, timeout=15)
+
+        with resp_ctx as resp:
             data = json.loads(resp.read().decode("utf-8"))
 
-        words = []
         events = data.get("events", [])
         seen_events = set()
         raw_words = []
@@ -65,7 +77,7 @@ def fetch_youtube_instant_subtitles(url: str, preferred_lang: str = "en") -> dic
                         w_start = seg_start + (idx * 0.18)
                         raw_words.append({
                             "word": clean_sw,
-                            "start": round(w_start, 2)
+                            "start": round(w_start, 2),
                         })
 
         if not raw_words:
@@ -98,11 +110,12 @@ def fetch_youtube_instant_subtitles(url: str, preferred_lang: str = "en") -> dic
         return {
             "language": lang_key,
             "words": clean_words,
-            "duration": float(info.get("duration", 0.0))
+            "duration": float(info.get("duration", 0.0)),
         }
     except Exception as e:
         print(f"[Subtitles] YouTube instant caption extraction failed ({e}). Falling back to Faster-Whisper.")
         return None
+
 
 class SpeechTranscriber:
     def __init__(self, model_size: str = "base"):
@@ -118,7 +131,7 @@ class SpeechTranscriber:
                 self.model_size,
                 device=self.device,
                 compute_type=self.compute_type,
-                download_root=str(CACHE_DIR / "whisper")
+                download_root=str(CACHE_DIR / "whisper"),
             )
 
     def transcribe(self, audio_path: str, language: str = None, progress_callback=None) -> dict:
@@ -136,7 +149,7 @@ class SpeechTranscriber:
             beam_size=1,
             word_timestamps=True,
             vad_filter=True,
-            language=language if language and language != "auto" else None
+            language=language if language and language != "auto" else None,
         )
 
         total_dur = max(1.0, info.duration)
@@ -156,22 +169,22 @@ class SpeechTranscriber:
                     word_obj = {
                         "word": w.word.strip(),
                         "start": round(w.start, 2),
-                        "end": round(w.end, 2)
+                        "end": round(w.end, 2),
                     }
                     if word_obj["word"]:
                         all_words.append(word_obj)
                         seg_words.append(word_obj)
-            
+
             all_segments.append({
                 "text": seg.text.strip(),
                 "start": round(seg.start, 2),
                 "end": round(seg.end, 2),
-                "words": seg_words
+                "words": seg_words,
             })
 
         return {
             "language": info.language,
             "duration": round(info.duration, 2),
             "words": all_words,
-            "segments": all_segments
+            "segments": all_segments,
         }

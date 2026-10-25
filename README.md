@@ -97,8 +97,9 @@ ClipStack/
 │   ├── social_publisher.py     # Multi-platform viral copy generator & publishers
 │   ├── subtitle_engine.py      # Microsecond animated subtitle styling (Hormozi, Beast, etc.)
 │   ├── thumbnail_generator.py  # 8K distinct thumbnail engine
-│   ├── transcription.py        # Faster-Whisper speech-to-text
-│   └── verifier.py             # Audio-visual boundary validation
+│   ├── transcription.py        # Faster-Whisper speech-to-text & instant YouTube captions
+│   ├── verifier.py             # Audio-visual boundary validation
+│   └── warp_shield.py          # Zero-cookie userspace Cloudflare WARP Shield (wgcf + wireproxy)
 ├── static/
 │   └── index.html              # Responsive Web Studio UI (TailwindCSS + Lucide Icons)
 ├── workspace/
