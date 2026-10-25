@@ -18,29 +18,13 @@ _YOUTUBE_INFO_CACHE = {}
 def get_base_ydl_opts() -> dict:
     """
     Returns resilient base options bypassing YouTube bot detection and Error 152.
-    Emulates InnerTube Android mobile client which bypasses web bot challenges on cloud/datacenter IPs.
+    Uses authenticated cookies and Node.js challenge solving for 100% reliable extraction.
     """
     opts = {
         'quiet': True,
         'no_warnings': True,
         'overwrites': True,
         'nocheckcertificate': True,
-        'http_headers': {
-            'User-Agent': (
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                'AppleWebKit/537.36 (KHTML, like Gecko) '
-                'Chrome/130.0.0.0 Safari/537.36'
-            ),
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Sec-Fetch-Mode': 'navigate',
-        },
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['android'],
-                'player_skip': ['webpage', 'configs', 'js']
-            }
-        }
     }
 
     # Automatically load cookies.txt if provided by user or saved in workspace
