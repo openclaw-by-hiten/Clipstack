@@ -155,12 +155,40 @@
         </div>
 
         <!-- Aspect Ratio -->
-        <div>
-          <label class="text-xs font-semibold text-neutral-300 block mb-2">Aspect Ratio & Framing</label>
-          <div class="grid grid-cols-3 gap-1.5 sm:gap-2" id="aspectPicker">
-            <button type="button" data-aspect="9:16" class="aspect-btn py-2 rounded-xl border border-blue-500 bg-blue-500/10 text-blue-400 text-xs font-bold">9:16 Vertical</button>
-            <button type="button" data-aspect="16:9" class="aspect-btn py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-400 text-xs font-semibold hover:border-neutral-700">16:9 Landscape</button>
-            <button type="button" data-aspect="1:1" class="aspect-btn py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-400 text-xs font-semibold hover:border-neutral-700">1:1 Square</button>
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-semibold text-neutral-300 block mb-2">Aspect Ratio</label>
+            <div class="grid grid-cols-3 gap-1.5 sm:gap-2" id="aspectPicker">
+              <button type="button" data-aspect="9:16" class="aspect-btn py-2 rounded-xl border border-blue-500 bg-blue-500/10 text-blue-400 text-xs font-bold">9:16 Vertical</button>
+              <button type="button" data-aspect="16:9" class="aspect-btn py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-400 text-xs font-semibold hover:border-neutral-700">16:9 Landscape</button>
+              <button type="button" data-aspect="1:1" class="aspect-btn py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-400 text-xs font-semibold hover:border-neutral-700">1:1 Square</button>
+            </div>
+          </div>
+
+          <!-- AI Auto-Align Subject Framing Mode -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-semibold text-neutral-300">AI Subject Auto-Alignment</label>
+              <span class="text-[10px] text-emerald-400 font-semibold">Zero Half-Cropped Faces</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2" id="framingPicker">
+              <button type="button" data-framing="auto" class="framing-btn p-2 rounded-xl border border-emerald-500 bg-emerald-500/10 text-emerald-300 text-left transition-all">
+                <div class="text-[11px] font-bold">✨ AI Auto-Align</div>
+                <div class="text-[9px] text-emerald-400/80">Smart Multi-Subject</div>
+              </button>
+              <button type="button" data-framing="smart_fit" class="framing-btn p-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-300 hover:border-neutral-700 text-left transition-all">
+                <div class="text-[11px] font-bold">🎬 Cinema Fit</div>
+                <div class="text-[9px] text-neutral-400">Full Scene + Blur</div>
+              </button>
+              <button type="button" data-framing="face_track" class="framing-btn p-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-300 hover:border-neutral-700 text-left transition-all">
+                <div class="text-[11px] font-bold">🎯 Face Track</div>
+                <div class="text-[9px] text-neutral-400">Solo Speaker Crop</div>
+              </button>
+              <button type="button" data-framing="split_screen" class="framing-btn p-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-300 hover:border-neutral-700 text-left transition-all">
+                <div class="text-[11px] font-bold">👥 Duo Split</div>
+                <div class="text-[9px] text-neutral-400">2-Speaker Stack</div>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -221,8 +249,8 @@
             <span>Vignette Atmosphere</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
-            <input type="checkbox" id="grainToggle" checked class="w-4 h-4 accent-yellow-400 rounded shrink-0" />
-            <span>Cinematic Film Grain</span>
+            <input type="checkbox" id="grainToggle" class="w-4 h-4 accent-yellow-400 rounded shrink-0" />
+            <span>Subtle Film Grain (Optional)</span>
           </label>
         </div>
       </div>
@@ -366,8 +394,8 @@
           </h3>
           <button id="closePlayer" class="text-neutral-500 hover:text-white text-xs">✕ Close</button>
         </div>
-        <div class="aspect-[9/16] bg-black rounded-xl overflow-hidden max-h-[460px] mx-auto border border-neutral-800 relative">
-          <video id="videoPlayer" controls class="w-full h-full object-contain"></video>
+        <div id="playerFrame" class="aspect-[9/16] bg-black rounded-xl overflow-hidden max-h-[460px] mx-auto border border-neutral-800 relative">
+          <video id="videoPlayer" controls preload="metadata" playsinline class="w-full h-full object-contain"></video>
         </div>
         <div class="mt-3.5 flex flex-wrap gap-2">
           <a id="downloadBtn" href="#" download class="flex-1 min-w-[120px] bg-white hover:bg-neutral-200 text-black text-center font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all">
@@ -540,6 +568,11 @@
           <div>
             <label class="text-[10px] text-neutral-500 uppercase font-bold block mb-1">Hashtags</label>
             <input type="text" id="pubHashtags" placeholder="#Shorts #Reels #Viral #Trending" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-yellow-400">
+          </div>
+
+          <div>
+            <label class="text-[10px] text-neutral-500 uppercase font-bold block mb-1">Suggested Pinned / Engagement Comment</label>
+            <input type="text" id="pubPinnedComment" placeholder="Auto-generated clip engagement question..." class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-emerald-300 placeholder-neutral-500 focus:outline-none focus:border-emerald-400">
           </div>
         </div>
 
@@ -846,6 +879,17 @@
             <input type="text" id="vcYtTags" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-red-300 font-mono focus:outline-none focus:border-red-500" readonly />
             <div id="vcYtTagsPills" class="flex gap-1.5 pt-1 flex-wrap"></div>
           </div>
+
+          <!-- Suggested Pinned Comment Box -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-amber-300 uppercase">📌 Suggested Pinned Comment (Boosts Algorithm Replies)</label>
+              <button class="copy-field-btn text-[11px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1" data-target="vcYtPinned">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Comment
+              </button>
+            </div>
+            <textarea id="vcYtPinned" rows="2" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-2.5 text-xs text-amber-100 focus:outline-none focus:border-amber-400 custom-scrollbar" readonly></textarea>
+          </div>
         </div>
 
         <!-- Tab 2: Instagram Reels -->
@@ -880,6 +924,17 @@
             </div>
             <input type="text" id="vcIgTags" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-pink-300 font-mono focus:outline-none focus:border-pink-500" readonly />
             <div id="vcIgTagsPills" class="flex gap-1.5 pt-1 flex-wrap"></div>
+          </div>
+
+          <!-- Suggested First Comment Box -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-pink-300 uppercase">💬 Suggested First Comment (Reels Engagement Trigger)</label>
+              <button class="copy-field-btn text-[11px] text-pink-400 hover:text-pink-300 font-bold flex items-center gap-1" data-target="vcIgPinned">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Comment
+              </button>
+            </div>
+            <textarea id="vcIgPinned" rows="2" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-2.5 text-xs text-pink-100 focus:outline-none focus:border-pink-400 custom-scrollbar" readonly></textarea>
           </div>
         </div>
 
@@ -919,6 +974,17 @@
             <input type="text" id="vcXTags" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-400" readonly />
             <div id="vcXTagsPills" class="flex gap-1.5 pt-1 flex-wrap"></div>
           </div>
+
+          <!-- Suggested Follow-Up Reply -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-cyan-300 uppercase">🧵 Suggested Thread Reply / Debate Prompt</label>
+              <button class="copy-field-btn text-[11px] text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1" data-target="vcXPinned">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Reply
+              </button>
+            </div>
+            <textarea id="vcXPinned" rows="2" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-2.5 text-xs text-cyan-100 focus:outline-none focus:border-cyan-400 custom-scrollbar" readonly></textarea>
+          </div>
         </div>
 
         <!-- Tab 4: TikTok -->
@@ -953,6 +1019,17 @@
             </div>
             <input type="text" id="vcTtTags" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-400" readonly />
             <div id="vcTtTagsPills" class="flex gap-1.5 pt-1 flex-wrap"></div>
+          </div>
+
+          <!-- Suggested TikTok Pinned Comment -->
+          <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-emerald-300 uppercase">📌 Suggested TikTok Pinned Comment (Watch-Time Loop)</label>
+              <button class="copy-field-btn text-[11px] text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1" data-target="vcTtPinned">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Comment
+              </button>
+            </div>
+            <textarea id="vcTtPinned" rows="2" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-2.5 text-xs text-emerald-100 focus:outline-none focus:border-emerald-400 custom-scrollbar" readonly></textarea>
           </div>
         </div>
 
@@ -999,6 +1076,7 @@
       targetDuration: 60,
       clipCount: 3,
       aspectRatio: '9:16',
+      framingMode: 'auto',
       captionTheme: 'hormozi',
       uploadedFile: null
     };
@@ -1040,6 +1118,21 @@
         });
         btn.className = 'aspect-btn py-2 rounded-xl border border-blue-500 bg-blue-500/10 text-blue-400 text-xs font-bold';
         state.aspectRatio = btn.dataset.aspect;
+      });
+    });
+
+    // AI Subject Framing Picker
+    document.querySelectorAll('.framing-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.framing-btn').forEach(b => {
+          b.className = 'framing-btn p-2 rounded-xl border border-neutral-800 bg-neutral-950 text-neutral-300 hover:border-neutral-700 text-left transition-all';
+          const sub = b.querySelector('div:last-child');
+          if (sub) sub.className = 'text-[9px] text-neutral-400';
+        });
+        btn.className = 'framing-btn p-2 rounded-xl border border-emerald-500 bg-emerald-500/10 text-emerald-300 text-left transition-all';
+        const activeSub = btn.querySelector('div:last-child');
+        if (activeSub) activeSub.className = 'text-[9px] text-emerald-400/80';
+        state.framingMode = btn.dataset.framing || 'auto';
       });
     });
 
@@ -1308,6 +1401,7 @@
         target_duration: state.targetDuration,
         clip_count: state.clipCount,
         aspect_ratio: state.aspectRatio,
+        framing_mode: state.framingMode,
         caption_theme: state.captionTheme,
         watermark: document.getElementById('watermark').value.trim(),
         floating_watermark: document.getElementById('floatingWmToggle').checked,
@@ -1444,13 +1538,27 @@
         return;
       }
 
+      const layoutBadgeMap = {
+        'cinema_smart_fit_9_16': '🎬 Smart-Fit',
+        'face_track_9_16': '🎯 Face Track',
+        'duo_split_9_16': '👥 Duo Split',
+        'square_face_track': '◼ 1:1 Track',
+        'square_smart_fit': '◼ 1:1 Fit',
+        'landscape_16_9': '🖥 16:9 HD'
+      };
+
       clipsList.forEach(clip => {
         const card = document.createElement('div');
         card.className = 'bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-lg group hover:border-neutral-700 transition-all flex flex-col';
         const vidUrl = clip.video_url.startsWith('http') ? clip.video_url : apiUrl(clip.video_url);
-        const thumbUrl = clip.thumb_url.startsWith('http') || clip.thumb_url.startsWith('.') ? clip.thumb_url : apiUrl(clip.thumb_url);
+        const dlVidUrl = clip.video_url.startsWith('http') ? clip.video_url : apiUrl(clip.download_url || (`/api/download/${clip.id}.mp4`));
+        const thumbUrl = (clip.thumb_url.startsWith('http') || clip.thumb_url.startsWith('.')) ? clip.thumb_url : apiUrl(clip.thumb_url);
+        const dlThumbUrl = (clip.thumb_url.startsWith('http') || clip.thumb_url.startsWith('.')) ? clip.thumb_url : apiUrl(clip.thumb_download_url || (`/api/download/${clip.id}_thumb.jpg`));
+        const cardAspectClass = clip.aspect_ratio === '16:9' ? 'aspect-video' : (clip.aspect_ratio === '1:1' ? 'aspect-square' : 'aspect-[9/16]');
+        const layoutLabel = layoutBadgeMap[clip.layout || clip.layout_used] || clip.aspect_ratio || '9:16';
+        const sizeBadge = clip.file_size_mb ? ` • ${clip.file_size_mb} MB` : '';
           card.innerHTML = `
-            <div class="relative aspect-[9/16] bg-black overflow-hidden cursor-pointer preview-trigger" data-url="${vidUrl}">
+            <div class="relative ${cardAspectClass} bg-black overflow-hidden cursor-pointer preview-trigger" data-url="${vidUrl}">
               <img src="${thumbUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23222%22/></svg>'">
               <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <div class="w-12 h-12 rounded-full bg-white/90 text-black flex items-center justify-center shadow-lg font-bold">▶</div>
@@ -1463,7 +1571,10 @@
                 🔥 ${clip.neural_score || 80}% BRAIN
               </span>
               <span class="absolute bottom-2.5 left-2.5 bg-black/75 text-[10px] text-white font-mono px-2 py-0.5 rounded-md">
-                ${Math.round(clip.duration)}s
+                ${Math.round(clip.duration)}s${sizeBadge}
+              </span>
+              <span class="absolute bottom-2.5 right-2.5 bg-emerald-950/85 border border-emerald-500/30 text-[9px] text-emerald-300 font-semibold px-1.5 py-0.5 rounded-md">
+                ${layoutLabel}
               </span>
             </div>
             <div class="p-3.5 flex-1 flex flex-col justify-between">
@@ -1471,26 +1582,26 @@
               <div class="space-y-2 pt-2 border-t border-neutral-800/80">
                 <!-- Action Row 1: Direct Downloads (Video MP4 & 8K Thumb) -->
                 <div class="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
-                  <a href="${vidUrl}" download="${clip.id}.mp4" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center" title="Download vertical video MP4">
+                  <a href="${dlVidUrl}" download="${clip.id}.mp4" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center" title="Fast-download clip MP4">
                     <i data-lucide="download" class="w-3 h-3 text-yellow-400"></i> Video
                   </a>
-                  <a href="${thumbUrl}" download="${clip.id}_thumb.jpg" class="bg-neutral-800 hover:bg-neutral-700 text-yellow-400 hover:text-yellow-300 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-bold transition-all text-center shadow-sm" title="Download 8K high-quality thumbnail image">
+                  <a href="${dlThumbUrl}" download="${clip.id}_thumb.jpg" class="bg-neutral-800 hover:bg-neutral-700 text-yellow-400 hover:text-yellow-300 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-bold transition-all text-center shadow-sm" title="Download high-quality thumbnail image">
                     <i data-lucide="image" class="w-3 h-3"></i> Thumb
                   </a>
                 </div>
 
                 <!-- Action Row 2: 1-Click Copy Local Paths (Video Path & Thumb Path for Direct Uploads) -->
                 <div class="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
-                  <button type="button" class="copy-vid-path-btn bg-cyan-950/50 hover:bg-cyan-900/80 text-cyan-300 hover:text-cyan-100 border border-cyan-500/30 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center active:scale-95" data-path="${clip.video_path || ''}" data-id="${clip.id}" title="Click to copy exact Windows Video file path for upload">
+                  <button type="button" class="copy-vid-path-btn bg-cyan-950/50 hover:bg-cyan-900/80 text-cyan-300 hover:text-cyan-100 border border-cyan-500/30 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center active:scale-95" data-path="${clip.video_path || ''}" data-id="${clip.id}" title="Click to copy exact Video file path">
                     <i data-lucide="copy" class="w-2.5 h-2.5 text-cyan-400 shrink-0"></i> <span class="truncate">Video Path</span>
                   </button>
-                  <button type="button" class="copy-thumb-path-btn bg-amber-950/50 hover:bg-amber-900/80 text-amber-300 hover:text-amber-100 border border-amber-500/30 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center active:scale-95" data-path="${clip.thumb_path || ''}" data-id="${clip.id}" title="Click to copy exact Windows Thumbnail file path for upload">
+                  <button type="button" class="copy-thumb-path-btn bg-amber-950/50 hover:bg-amber-900/80 text-amber-300 hover:text-amber-100 border border-amber-500/30 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 font-semibold transition-all text-center active:scale-95" data-path="${clip.thumb_path || ''}" data-id="${clip.id}" title="Click to copy exact Thumbnail file path">
                     <i data-lucide="copy" class="w-2.5 h-2.5 text-amber-400 shrink-0"></i> <span class="truncate">Thumb Path</span>
                   </button>
                 </div>
 
                 <div class="flex items-center justify-between text-[11px] text-neutral-500 pt-0.5">
-                  <span>${clip.aspect_ratio} • ${Math.round(clip.duration)}s</span>
+                  <span>${clip.aspect_ratio} • ${Math.round(clip.duration)}s${sizeBadge}</span>
                   <button class="rebrand-trigger text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 text-[10px] font-bold" data-id="${clip.id}" title="Re-apply latest brand logo to thumbnail">
                     <i data-lucide="sparkles" class="w-2.5 h-2.5"></i> Apply Logo
                   </button>
@@ -1568,12 +1679,23 @@
           card.querySelector('.preview-trigger').addEventListener('click', () => {
             currentPlayerClip = clip;
             const playerBox = document.getElementById('playerBox');
+            const playerFrame = document.getElementById('playerFrame');
             const videoPlayer = document.getElementById('videoPlayer');
             const downloadBtn = document.getElementById('downloadBtn');
+            if (playerFrame) {
+              if (clip.aspect_ratio === '16:9') {
+                playerFrame.className = 'aspect-video w-full bg-black rounded-xl overflow-hidden max-h-[380px] mx-auto border border-neutral-800 relative';
+              } else if (clip.aspect_ratio === '1:1') {
+                playerFrame.className = 'aspect-square bg-black rounded-xl overflow-hidden max-h-[420px] mx-auto border border-neutral-800 relative';
+              } else {
+                playerFrame.className = 'aspect-[9/16] bg-black rounded-xl overflow-hidden max-h-[460px] mx-auto border border-neutral-800 relative';
+              }
+            }
             videoPlayer.src = vidUrl;
-            downloadBtn.href = vidUrl;
+            downloadBtn.href = dlVidUrl;
+            downloadBtn.setAttribute('download', `${clip.id}.mp4`);
             playerBox.classList.remove('hidden');
-            videoPlayer.play();
+            videoPlayer.play().catch(() => {});
             playerBox.scrollIntoView({ behavior: 'smooth' });
           });
 
@@ -1871,16 +1993,23 @@
       });
     }
 
+    function resolveAssetUrl(rawUrl) {
+      if (!rawUrl) return '';
+      if (rawUrl.startsWith('http') || rawUrl.startsWith('.') || rawUrl.startsWith('data:')) return rawUrl;
+      return apiUrl(rawUrl);
+    }
+
     async function openViralCopyModal(clip) {
       currentViralCopyClip = clip;
-      document.getElementById('vcClipThumb').src = clip.thumb_url;
+      const cid = clip.id || clip.clip_id;
+      document.getElementById('vcClipThumb').src = resolveAssetUrl(clip.thumb_url);
       document.getElementById('vcClipTitle').innerText = clip.title;
-      document.getElementById('vcClipId').innerText = clip.id;
+      document.getElementById('vcClipId').innerText = cid;
       
       viralCopyModal.classList.remove('hidden');
       lucide.createIcons();
 
-      await loadViralCopyData(clip.id, clip.title);
+      await loadViralCopyData(cid, clip.title);
     }
 
     async function loadViralCopyData(clipId, title) {
@@ -1926,6 +2055,9 @@
         document.getElementById('vcYtTitle').value = data.youtube.title || '';
         document.getElementById('vcYtDesc').value = data.youtube.description || '';
         document.getElementById('vcYtTags').value = data.youtube.hashtags_str || '';
+        if (document.getElementById('vcYtPinned')) {
+          document.getElementById('vcYtPinned').value = data.youtube.pinned_comment || '';
+        }
         renderTagPills('vcYtTagsPills', data.youtube.hashtags, 'bg-red-500/10 text-red-300 border-red-500/30 hover:bg-red-500/20');
       }
 
@@ -1933,6 +2065,9 @@
       if (data.instagram) {
         document.getElementById('vcIgCaption').value = data.instagram.caption || '';
         document.getElementById('vcIgTags').value = data.instagram.hashtags_str || '';
+        if (document.getElementById('vcIgPinned')) {
+          document.getElementById('vcIgPinned').value = data.instagram.pinned_comment || '';
+        }
         renderTagPills('vcIgTagsPills', data.instagram.hashtags, 'bg-pink-500/10 text-pink-300 border-pink-500/30 hover:bg-pink-500/20');
       }
 
@@ -1942,6 +2077,9 @@
         document.getElementById('vcXPost').value = postText;
         document.getElementById('vcXTags').value = data.twitter.hashtags_str || '';
         document.getElementById('vcXCharCount').innerText = `${postText.length} / 280 chars`;
+        if (document.getElementById('vcXPinned')) {
+          document.getElementById('vcXPinned').value = data.twitter.pinned_comment || '';
+        }
         renderTagPills('vcXTagsPills', data.twitter.hashtags, 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/20');
       }
 
@@ -1949,41 +2087,63 @@
       if (data.tiktok) {
         document.getElementById('vcTtCaption').value = data.tiktok.caption || '';
         document.getElementById('vcTtTags').value = data.tiktok.hashtags_str || '';
+        if (document.getElementById('vcTtPinned')) {
+          document.getElementById('vcTtPinned').value = data.tiktok.pinned_comment || '';
+        }
         renderTagPills('vcTtTagsPills', data.tiktok.hashtags, 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20');
       }
     }
 
     function generateClientViralCopy(clipId, title) {
-      const cleanTitle = (title || 'Viral Video Clip').replace(/[^\w\s?!.,'-]/g, '').trim();
-      const ytH = '@clipstack_A1';
-      const igH = '@clip_stacka1';
-      const xH = '@clipstack_A1';
+      const cleanTitle = (title || 'Must-Watch Highlight').replace(/\s+/g, ' ').trim();
+      const shortHeadline = cleanTitle.length > 78 ? cleanTitle.slice(0, 75).trim() + '...' : cleanTitle;
+      const ytH = (document.getElementById('brandYtHandle') && document.getElementById('brandYtHandle').value.trim()) || '@clipstack_A1';
+      const igH = (document.getElementById('brandIgHandle') && document.getElementById('brandIgHandle').value.trim()) || '@clip_stacka1';
+      const xH = (document.getElementById('brandXHandle') && document.getElementById('brandXHandle').value.trim()) || '@clipstack_A1';
+
+      const lower = cleanTitle.toLowerCase();
+      let nicheTags = ['#ViralClips', '#MustWatch'];
+      let promptQ = `What stood out to you most in "${shortHeadline}"? Drop your take below 👇`;
+      if (lower.includes('lbs') || lower.includes('weight') || lower.includes('workout') || lower.includes('$')) {
+        nicheTags = ['#Challenge', '#Transformation'];
+        promptQ = `Could you pull off this challenge (${shortHeadline})? Comment YES or NO below! 👇🔥`;
+      }
+
+      const ytTags = ['#Shorts', ...nicheTags, '#TrendingShorts', '#YouTubeShorts'];
+      const igTags = ['#Reels', ...nicheTags, '#ExplorePage', '#ViralReels'];
+      const xTags = [nicheTags[0], '#ViralVideo'];
+      const ttTags = ['#FYP', '#ForYou', ...nicheTags, '#ViralTikTok'];
 
       return {
         clip_id: clipId,
         youtube_handle: ytH,
         instagram_handle: igH,
         twitter_handle: xH,
+        default_hashtags: ytTags,
         youtube: {
-          title: `You won't believe what happened here... 😱 #Shorts`,
-          description: `Watch what happens in this clip! 👇\n\n${cleanTitle}\n\nDid this surprise you too? Leave a comment below! 🔥\nSubscribe to ${ytH} for more daily viral moments.`,
-          hashtags: ["#Shorts", "#Viral", "#Trending", "#MindBlown", "#ClipStack"],
-          hashtags_str: "#Shorts #Viral #Trending #MindBlown #ClipStack"
+          title: `${shortHeadline} #Shorts`,
+          description: `${cleanTitle}\n\n💬 ${promptQ}\n🔔 Subscribe to ${ytH} for more daily highlights!\n\n${ytTags.join(' ')}`,
+          pinned_comment: `📌 ${promptQ}`,
+          hashtags: ytTags,
+          hashtags_str: ytTags.join(' ')
         },
         instagram: {
-          caption: `Wait till the very end... 🤯\n\n${cleanTitle}\n\nTag someone who needs to see this! 👇\nFollow ${igH} for more high-energy clips.`,
-          hashtags: ["#Reels", "#ExplorePage", "#ViralReels", "#TrendingReels", "#InstaGood"],
-          hashtags_str: "#Reels #ExplorePage #ViralReels #TrendingReels #InstaGood"
+          caption: `${cleanTitle}\n\n💬 ${promptQ}\n📲 Send this to someone who needs to see it & follow ${igH}!\n\n${igTags.join(' ')}`,
+          pinned_comment: `${promptQ} 👀`,
+          hashtags: igTags,
+          hashtags_str: igTags.join(' ')
         },
         twitter: {
-          post_text: `Wait for it... 🤯 ${cleanTitle}\n\nThoughts? Follow ${xH} for more!`,
-          hashtags: ["#Viral", "#Trending", "#ClipStack"],
-          hashtags_str: "#Viral #Trending #ClipStack"
+          post_text: `${shortHeadline}\n\n${promptQ}\n\nFollow ${xH} ${xTags.join(' ')}`.slice(0, 278),
+          pinned_comment: `Full breakdown — what would you have done here? 👇`,
+          hashtags: xTags,
+          hashtags_str: xTags.join(' ')
         },
         tiktok: {
-          caption: `Wait for the ending... 🤯 Part 1! Follow ${ytH} for Part 2!`,
-          hashtags: ["#FYP", "#ForYou", "#Viral", "#Trending", "#StoryTime"],
-          hashtags_str: "#FYP #ForYou #Viral #Trending #StoryTime"
+          caption: `${shortHeadline} — wait till the end! Follow ${ytH} for more. ${ttTags.join(' ')}`,
+          pinned_comment: `${promptQ}`,
+          hashtags: ttTags,
+          hashtags_str: ttTags.join(' ')
         }
       };
     }
@@ -2002,9 +2162,10 @@
 
     function openPublishModal(clip) {
       currentPublishClip = clip;
-      document.getElementById('pubClipThumb').src = clip.thumb_url;
+      const cid = clip.id || clip.clip_id;
+      document.getElementById('pubClipThumb').src = resolveAssetUrl(clip.thumb_url);
       document.getElementById('pubClipTitle').innerText = clip.title;
-      document.getElementById('pubClipId').innerText = clip.clip_id;
+      document.getElementById('pubClipId').innerText = cid;
       document.getElementById('pubClipDuration').innerText = `${Math.round(clip.duration)}s`;
       document.getElementById('pubTitle').value = clip.title;
       document.getElementById('pubStatusBanner').classList.add('hidden');
@@ -2013,8 +2174,8 @@
       btn.disabled = false;
       btn.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i> Launch & Publish`;
 
-      // Auto generate initial viral copy
-      fetchViralCopy(clip.clip_id, clip.title);
+      // Auto generate initial viral copy aligned to this clip's transcript
+      fetchViralCopy(cid, clip.title);
 
       document.getElementById('publishModal').classList.remove('hidden');
       lucide.createIcons();
@@ -2043,6 +2204,9 @@
         if (data.instagram && data.instagram.caption) {
           document.getElementById('pubCaption').value = data.instagram.caption;
         }
+        if (data.youtube && data.youtube.pinned_comment && document.getElementById('pubPinnedComment')) {
+          document.getElementById('pubPinnedComment').value = data.youtube.pinned_comment;
+        }
         if (data.default_hashtags) {
           document.getElementById('pubHashtags').value = data.default_hashtags.join(' ');
         } else if (data.youtube && data.youtube.hashtags_str) {
@@ -2060,7 +2224,8 @@
 
     document.getElementById('pubGenerateCopyBtn').addEventListener('click', () => {
       if (!currentPublishClip) return;
-      fetchViralCopy(currentPublishClip.clip_id, document.getElementById('pubTitle').value.trim());
+      const cid = currentPublishClip.id || currentPublishClip.clip_id;
+      fetchViralCopy(cid, document.getElementById('pubTitle').value.trim());
     });
 
     const hidePublishModal = () => document.getElementById('publishModal').classList.add('hidden');
@@ -2091,7 +2256,7 @@
       const hashtags = hashtagsStr ? hashtagsStr.split(/\s+/).map(t => t.startsWith('#') ? t : '#' + t) : [];
 
       const payload = {
-        clip_id: currentPublishClip.clip_id,
+        clip_id: currentPublishClip.id || currentPublishClip.clip_id,
         platforms: platforms,
         title: document.getElementById('pubTitle').value.trim(),
         caption: document.getElementById('pubCaption').value.trim(),
@@ -2119,7 +2284,7 @@
         if (data.status === 'success' || data.status === 'scheduled') {
           msg.className = 'font-bold text-xs text-emerald-400 flex items-center gap-1.5';
           msg.innerHTML = `<span>✓</span> Published Successfully across ${platforms.length} platform(s)`;
-          appendLog(`Broadcast ${currentPublishClip.clip_id} to ${platforms.join(', ')}`, 'text-emerald-400 font-bold');
+          appendLog(`Broadcast ${currentPublishClip.id || currentPublishClip.clip_id} to ${platforms.join(', ')}`, 'text-emerald-400 font-bold');
         } else {
           msg.className = 'font-bold text-xs text-amber-400';
           msg.innerHTML = `Status: ${data.status}`;

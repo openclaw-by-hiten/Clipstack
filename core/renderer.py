@@ -2,14 +2,49 @@ import os
 import subprocess
 from pathlib import Path
 from core.audio_ducking import apply_audio_ducking
+from core.smart_crop import generate_reframe_plan
+
+_NVENC_AVAILABLE = None
+
+
+def _has_nvenc() -> bool:
+    """Detects once whether hardware-accelerated NVIDIA h264_nvenc is usable (e.g. Google Colab T4 GPU)."""
+    global _NVENC_AVAILABLE
+    if _NVENC_AVAILABLE is not None:
+        return _NVENC_AVAILABLE
+    try:
+        res = subprocess.run(
+            [
+                "ffmpeg", "-hide_banner", "-loglevel", "error",
+                "-f", "lavfi", "-i", "color=c=black:s=256x256:d=0.1",
+                "-c:v", "h264_nvenc", "-f", "null", "-",
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=6,
+        )
+        _NVENC_AVAILABLE = res.returncode == 0
+    except Exception:
+        _NVENC_AVAILABLE = False
+    return _NVENC_AVAILABLE
+
 
 def escape_ffmpeg_path(path_str: str) -> str:
-    """Escapes Windows paths for FFmpeg filter strings (colons and backslashes)."""
+    """Escapes paths for FFmpeg filter strings (colons and backslashes)."""
     clean_p = path_str.replace("\\", "/")
     if ":" in clean_p:
         parts = clean_p.split(":", 1)
         clean_p = f"{parts[0]}\\:{parts[1]}"
     return clean_p
+
+
+def _target_dimensions(aspect_ratio: str) -> tuple[int, int]:
+    if aspect_ratio == "1:1":
+        return 1080, 1080
+    if aspect_ratio == "16:9":
+        return 1920, 1080
+    return 1080, 1920
+
 
 def render_clip(
     source_video: str,
@@ -18,149 +53,190 @@ def render_clip(
     ass_subtitle_path: str,
     output_mp4: str,
     aspect_ratio: str = "9:16",
+    framing_mode: str = "auto",
+    reframe_plan: dict = None,
     watermark: str = "@clipstack_A1",
     floating_watermark: bool = True,
     header_title: str = None,
     enable_vignette: bool = True,
-    enable_grain: bool = True,
+    enable_grain: bool = False,
     bgm_path: str = None,
-    custom_thumbnail_path: str = None
+    custom_thumbnail_path: str = None,
 ) -> str:
     """
     Renders the final viral clip:
-    - Crops to 9:16, 1:1, or 16:9
-    - Applies visual atmosphere filters (vignette, film grain, unsharp)
-    - Burns animated .ass subtitles
-    - Overlays branding watermark and top header text with explicit Windows fonts
-    - Mixes and ducks background audio (if provided)
-    - Generates companion thumbnail
+    - AI Auto-Aligns to 9:16, 1:1, or 16:9 (Face-Track, Duo Split, or Pro Cinema Smart-Fit)
+    - Encodes web-streaming-optimized H.264 MP4 (~8-13 MB per 60s instead of 76 MB!) with +faststart
+    - Uses NVIDIA NVENC hardware encoding automatically when a GPU (Colab T4) is present
+    - Dynamically adapts floating watermark & header coordinates to any canvas size
     """
-    filters = []
+    if reframe_plan is None:
+        reframe_plan = generate_reframe_plan(
+            video_path=source_video,
+            clip_duration=clip_duration,
+            aspect_ratio=aspect_ratio,
+            framing_mode=framing_mode,
+        )
 
-    # 1. Aspect Ratio Reframing (Face-Aware Smart Auto-Framing)
-    if aspect_ratio in ["9:16", "1:1"]:
-        try:
-            from core.smart_crop import generate_smart_crop_filter
-            crop_filter = generate_smart_crop_filter(source_video, clip_duration, aspect_ratio)
-            filters.append(crop_filter)
-        except Exception as e:
-            print(f"[Renderer] Smart crop fallback: {e}")
-            if aspect_ratio == "9:16":
-                filters.append("crop='min(iw,ih*9/16)':'min(ih,iw*16/9)':(iw-ow)/2:(ih-oh)/2,scale=1080:1920:flags=lanczos")
-            else:
-                filters.append("crop='min(iw,ih)':'min(iw,ih)':(iw-ow)/2:(ih-oh)/2,scale=1080:1080:flags=lanczos")
-    else:  # 16:9
-        filters.append("scale=1920:1080:flags=lanczos")
+    reframe_graph = reframe_plan["filter"]
+    post_filters = []
 
-    # 2. Sharpening filter for crisp mobile display
-    filters.append("unsharp=lx=3:ly=3:la=0.6")
+    # 1. Crisp mobile detail enhancement
+    post_filters.append("unsharp=lx=3:ly=3:la=0.45")
 
-    # 3. Atmosphere: Vignette
+    # 2. Subtle Vignette
     if enable_vignette:
-        filters.append("vignette=PI/4.5")
+        post_filters.append("vignette=PI/5.2")
 
-    # 4. Atmosphere: Subtle Film Grain
+    # 3. Compression-safe micro texture (spatial only — avoids 8x temporal noise file-size bloat!)
     if enable_grain:
-        filters.append("noise=alls=8:allf=t+u")
+        post_filters.append("noise=c0s=2:allf=u")
 
-    # Cross-platform font path detection for Windows & Linux / Colab
+    # Cross-platform font paths
     if os.name == "nt":
         font_impact = "C\\:/Windows/Fonts/impact.ttf"
         font_arial = "C\\:/Windows/Fonts/arial.ttf"
         font_impact_opt = f":fontfile='{font_impact}'"
         font_arial_opt = f":fontfile='{font_arial}'"
     else:
-        # Linux / Colab font paths
         font_impact = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
         font_arial = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-        if os.path.exists("/usr/share/fonts/truetype/msttcorefonts/impact.ttf"):
+        if os.path.exists("/usr/share/fonts/truetype/msttcorefonts/Impact.ttf"):
+            font_impact = "/usr/share/fonts/truetype/msttcorefonts/Impact.ttf"
+        elif os.path.exists("/usr/share/fonts/truetype/msttcorefonts/impact.ttf"):
             font_impact = "/usr/share/fonts/truetype/msttcorefonts/impact.ttf"
-        if os.path.exists("/usr/share/fonts/truetype/msttcorefonts/arial.ttf"):
+        if os.path.exists("/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"):
+            font_arial = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
+        elif os.path.exists("/usr/share/fonts/truetype/msttcorefonts/arial.ttf"):
             font_arial = "/usr/share/fonts/truetype/msttcorefonts/arial.ttf"
         font_impact_opt = f":fontfile='{font_impact}'" if os.path.exists(font_impact) else ""
         font_arial_opt = f":fontfile='{font_arial}'" if os.path.exists(font_arial) else ""
 
-    # 5. Header / Title Text (Sleek modern pill badge with opening hook visibility)
+    # 4. Header / Hook Title Pill Badge
     if header_title:
-        clean_title = header_title.replace("'", "").replace(":", "-")[:35]
-        # In FFmpeg drawtext filter, escape commas and percent signs
+        clean_title = header_title.replace("'", "").replace(":", "-")[:38]
         esc_title = clean_title.replace(",", "\\,").replace("%", "\\%")
-        filters.append(
-            f"drawtext=text='{esc_title}':x=(w-text_w)/2:y=140:"
-            f"fontsize=38:fontcolor=white:box=1:boxcolor=black@0.45:boxborderw=14:borderw=2:bordercolor=black:"
+        header_y = 140 if aspect_ratio == "9:16" else 65
+        header_fs = 36 if aspect_ratio == "9:16" else 30
+        post_filters.append(
+            f"drawtext=text='{esc_title}':x=(w-text_w)/2:y={header_y}:"
+            f"fontsize={header_fs}:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=14:borderw=2:bordercolor=black:"
             f"shadowcolor=black@0.8:shadowx=2:shadowy=2{font_impact_opt}:enable='between(t,0,5)'"
         )
 
-    # 6. Watermark Overlay (Anti-AI Dynamic Floating or Static)
+    # 5. Watermark Overlay (Resolution-Independent Dynamic Edge Patrol for 9:16, 1:1, and 16:9!)
     if watermark:
-        clean_wm = watermark.replace("'", "")
+        clean_wm = watermark.replace("'", "").replace(":", "\\:").replace(",", "\\,")
+        wm_fs = 32 if aspect_ratio == "9:16" else 26
+        top_m = 85 if aspect_ratio == "9:16" else 42
+        bot_expr = "(h-text_h-85)" if aspect_ratio == "9:16" else "(h-text_h-42)"
         if floating_watermark:
-            # Perimeter Edge Patrol (Anti-Crop & Anti-AI Inpainting):
-            # 1. Appears top-right and glides horizontally to top-left (y=100)
-            # 2. Glides down along the left margin to bottom-left
-            # 3. Traverses horizontally across the bottom margin to bottom-right (y=1700)
-            # 4. Glides up along the right margin to top-right, and repeats
-            # Leaves the center 80% viewing angle completely unobstructed!
             x_expr = (
-                "if(lt(mod(t\\,12)\\,4.5)\\,"
-                "(w-text_w-60)-(w-text_w-120)*(mod(t\\,12)/4.5)\\,"
-                "if(lt(mod(t\\,12)\\,6.0)\\,60\\,"
-                "if(lt(mod(t\\,12)\\,10.5)\\,60+(w-text_w-120)*((mod(t\\,12)-6.0)/4.5)\\,"
-                "w-text_w-60)))"
+                "if(lt(mod(t\\,14)\\,5.0)\\,"
+                "(w-text_w-48)-(w-text_w-96)*(mod(t\\,14)/5.0)\\,"
+                "if(lt(mod(t\\,14)\\,7.0)\\,48\\,"
+                "if(lt(mod(t\\,14)\\,12.0)\\,48+(w-text_w-96)*((mod(t\\,14)-7.0)/5.0)\\,"
+                "w-text_w-48)))"
             )
             y_expr = (
-                "if(lt(mod(t\\,12)\\,4.5)\\,100\\,"
-                "if(lt(mod(t\\,12)\\,6.0)\\,100+(1700-100)*((mod(t\\,12)-4.5)/1.5)\\,"
-                "if(lt(mod(t\\,12)\\,10.5)\\,1700\\,"
-                "1700-(1700-100)*((mod(t\\,12)-10.5)/1.5))))"
+                f"if(lt(mod(t\\,14)\\,5.0)\\,{top_m}\\,"
+                f"if(lt(mod(t\\,14)\\,7.0)\\,{top_m}+({bot_expr}-{top_m})*((mod(t\\,14)-5.0)/2.0)\\,"
+                f"if(lt(mod(t\\,14)\\,12.0)\\,{bot_expr}\\,"
+                f"{bot_expr}-({bot_expr}-{top_m})*((mod(t\\,14)-12.0)/2.0))))"
             )
-            filters.append(
+            post_filters.append(
                 f"drawtext=text='{clean_wm}':x='{x_expr}':y='{y_expr}':"
-                f"fontsize=34:fontcolor=white@0.82{font_arial_opt}:"
+                f"fontsize={wm_fs}:fontcolor=white@0.82{font_arial_opt}:"
                 f"shadowcolor=black@0.8:shadowx=2:shadowy=2"
             )
         else:
-            filters.append(
-                f"drawtext=text='{clean_wm}':x=w-text_w-40:y=h-text_h-60:"
-                f"fontsize=34:fontcolor=white@0.75{font_arial_opt}:shadowcolor=black@0.8:shadowx=2:shadowy=2"
+            post_filters.append(
+                f"drawtext=text='{clean_wm}':x=w-text_w-40:y=h-text_h-50:"
+                f"fontsize={wm_fs}:fontcolor=white@0.75{font_arial_opt}:shadowcolor=black@0.8:shadowx=2:shadowy=2"
             )
 
-    # 7. Animated Subtitles Burn-in via libass
+    # 6. Animated Subtitles Burn-in via libass
     if ass_subtitle_path and os.path.exists(ass_subtitle_path):
         esc_ass = escape_ffmpeg_path(ass_subtitle_path)
-        filters.append(f"subtitles='{esc_ass}'")
+        post_filters.append(f"subtitles='{esc_ass}'")
 
-    filter_complex = ",".join(filters)
+    post_filters.append("format=yuv420p")
+    full_filter_complex = f"{reframe_graph};[reframed]{','.join(post_filters)}[vout]"
 
-    # Render video slice
     temp_clip_video = output_mp4.replace(".mp4", "_temp.mp4")
 
-    cmd = [
-        "ffmpeg", "-y",
-        "-ss", str(clip_start),
-        "-t", str(clip_duration),
-        "-i", source_video,
-        "-vf", filter_complex,
-        "-c:v", "libx264",
-        "-preset", "veryfast",
-        "-crf", "20",
-        "-c:a", "aac",
-        "-b:a", "192k",
-        temp_clip_video
-    ]
+    # Choose GPU NVENC or fast web-optimized libx264 (~1.8-2.4 Mbps -> ~9-13 MB per 60s!)
+    use_nvenc = _has_nvenc()
+    if use_nvenc:
+        v_enc_opts = [
+            "-c:v", "h264_nvenc",
+            "-preset", "p4",
+            "-rc", "vbr",
+            "-cq", "24",
+            "-b:v", "2200k",
+            "-maxrate", "2800k",
+            "-bufsize", "5600k",
+            "-profile:v", "high",
+        ]
+    else:
+        v_enc_opts = [
+            "-c:v", "libx264",
+            "-preset", "veryfast",
+            "-crf", "23",
+            "-maxrate", "2500k",
+            "-bufsize", "5000k",
+            "-profile:v", "high",
+        ]
 
-    subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    def _build_ffmpeg_cmd(enc_opts: list) -> list:
+        return (
+            [
+                "ffmpeg", "-y",
+                "-ss", str(clip_start),
+                "-t", str(clip_duration),
+                "-i", source_video,
+                "-filter_complex", full_filter_complex,
+                "-map", "[vout]",
+                "-map", "0:a?",
+            ]
+            + enc_opts
+            + [
+                "-c:a", "aac",
+                "-b:a", "128k",
+                "-ar", "44100",
+                "-movflags", "+faststart",
+                temp_clip_video,
+            ]
+        )
 
-    # 8. Background Music & Audio Ducking
+    try:
+        subprocess.run(_build_ffmpeg_cmd(v_enc_opts), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    except subprocess.CalledProcessError:
+        if use_nvenc:
+            # Fallback cleanly to CPU libx264 if NVENC session limit hit
+            cpu_opts = [
+                "-c:v", "libx264",
+                "-preset", "veryfast",
+                "-crf", "23",
+                "-maxrate", "2500k",
+                "-bufsize", "5000k",
+                "-profile:v", "high",
+            ]
+            subprocess.run(_build_ffmpeg_cmd(cpu_opts), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        else:
+            raise
+
+    # 7. Background Music & Audio Ducking (preserving +faststart!)
     if bgm_path and os.path.exists(bgm_path):
         speech_audio = output_mp4.replace(".mp4", "_speech.wav")
         ducked_audio = output_mp4.replace(".mp4", "_ducked.aac")
-        
+
         subprocess.run(
             ["ffmpeg", "-y", "-i", temp_clip_video, "-vn", speech_audio],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
         )
-        
         apply_audio_ducking(speech_audio, bgm_path, ducked_audio)
 
         subprocess.run(
@@ -172,9 +248,12 @@ def render_clip(
                 "-map", "1:a",
                 "-c:v", "copy",
                 "-c:a", "copy",
-                output_mp4
+                "-movflags", "+faststart",
+                output_mp4,
             ],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
         )
 
         for p in [temp_clip_video, speech_audio, ducked_audio]:
@@ -185,23 +264,22 @@ def render_clip(
             os.remove(output_mp4)
         os.rename(temp_clip_video, output_mp4)
 
-    # 9. Generate Companion High-Quality Smart Thumbnail for Clip Library
+    # 8. Companion High-Quality Thumbnail matching target aspect ratio
     thumb_path = output_mp4.replace(".mp4", "_thumb.jpg")
-    
+    tw, th = _target_dimensions(aspect_ratio)
+
     if custom_thumbnail_path and os.path.exists(custom_thumbnail_path):
-        # Professional AI Thumbnail Integration
         thumb_cmd = [
             "ffmpeg", "-y",
             "-i", custom_thumbnail_path,
-            "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
+            "-vf", f"scale={tw}:{th}:force_original_aspect_ratio=increase,crop={tw}:{th}",
             "-q:v", "2",
-            thumb_path
+            thumb_path,
         ]
         subprocess.run(thumb_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
     else:
         seek_start = 3.5 if clip_duration > 7.0 else 0.5
-        scan_frames = min(120, int(max(30, (clip_duration - seek_start) * 20)))
-
+        scan_frames = min(90, int(max(24, (clip_duration - seek_start) * 15)))
         thumb_cmd = [
             "ffmpeg", "-y",
             "-ss", str(seek_start),
@@ -210,18 +288,18 @@ def render_clip(
             "-frames:v", "1",
             "-update", "1",
             "-q:v", "2",
-            thumb_path
+            thumb_path,
         ]
         try:
             subprocess.run(thumb_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
         except Exception:
-            # Fallback to direct frame capture if thumbnail filter fails
             subprocess.run(
-                ["ffmpeg", "-y", "-ss", "3.0", "-i", output_mp4, "-frames:v", "1", "-update", "1", "-q:v", "2", thumb_path],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True
+                ["ffmpeg", "-y", "-ss", "2.0", "-i", output_mp4, "-frames:v", "1", "-update", "1", "-q:v", "2", thumb_path],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True,
             )
 
-    # 10. Composite active channel logo badge onto thumbnail
     try:
         from core.branding import composite_brand_on_thumbnail
         composite_brand_on_thumbnail(thumb_path)

@@ -1,14 +1,14 @@
 import os
 os.environ['YTDLP_NO_PLUGINS'] = '1'
 
-import os
 import json
+import re
 import time
 import asyncio
 from pathlib import Path
 from typing import Optional
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, BackgroundTasks, HTTPException
-from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, BackgroundTasks, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse, StreamingResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -35,7 +35,7 @@ from core.branding import (
     composite_brand_on_thumbnail
 )
 
-app = FastAPI(title="Neural Clip Studio", version="1.0.0")
+app = FastAPI(title="Neural Clip Studio", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,6 +43,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Accept-Ranges", "Content-Range", "Content-Length", "Content-Disposition"],
 )
 
 orchestrator = ClipPipelineOrchestrator()
@@ -69,7 +70,6 @@ class ConnectionManager:
                 self.disconnect(connection)
 
 manager = ConnectionManager()
-loop = asyncio.get_event_loop()
 
 class ProcessRequest(BaseModel):
     youtube_url: Optional[str] = None
@@ -77,12 +77,13 @@ class ProcessRequest(BaseModel):
     target_duration: int = 60
     clip_count: int = Field(default=3, ge=1, le=5)
     aspect_ratio: str = "9:16"
+    framing_mode: str = "auto"
     caption_theme: str = "hormozi"
     watermark: str = "@clipstack_A1"
     floating_watermark: bool = True
     header_title: Optional[str] = None
     enable_vignette: bool = True
-    enable_grain: bool = True
+    enable_grain: bool = False
     ai_thumbnail: bool = True
     custom_thumbnail_path: Optional[str] = None
 
@@ -117,7 +118,8 @@ async def start_process(req: ProcessRequest, background_tasks: BackgroundTasks):
     if req.clip_count > MAX_CLIPS_PER_SESSION:
         req.clip_count = MAX_CLIPS_PER_SESSION
 
-    background_tasks.add_task(run_session_worker, req.dict())
+    payload = req.model_dump() if hasattr(req, "model_dump") else req.dict()
+    background_tasks.add_task(run_session_worker, payload)
     return {"status": "started", "message": "Pipeline initiated in background."}
 
 @app.post("/api/upload")
@@ -142,26 +144,123 @@ async def list_clips():
                 data["video_path"] = str(video_file.resolve())
                 data["thumb_path"] = str(thumb_file.resolve())
                 data["folder_path"] = exports_abs
+                data.setdefault("download_url", f"/api/download/{clean_id}.mp4")
+                data.setdefault("thumb_download_url", f"/api/download/{clean_id}_thumb.jpg")
+                if video_file.exists() and "file_size_mb" not in data:
+                    data["file_size_mb"] = round(video_file.stat().st_size / (1024 * 1024), 2)
                 clips.append(data)
         except Exception:
             continue
     clips.sort(key=lambda x: x.get("created_at", 0), reverse=True)
     return {"clips": clips, "folder_path": exports_abs}
 
-@app.get("/api/stream/{filename}")
-async def stream_media(filename: str):
-    file_path = EXPORTS_DIR / filename
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="File not found")
-    media_type = "video/mp4" if filename.endswith(".mp4") else "image/jpeg"
-    return FileResponse(path=str(file_path), media_type=media_type)
 
-@app.get("/api/download/{filename}")
-async def download_clip(filename: str):
-    file_path = EXPORTS_DIR / filename
+def _iter_file_range(file_path: Path, start: int, end: int, chunk_size: int = 262144):
+    """Yields fixed-size byte chunks for smooth zero-buffer HTTP 206 video streaming."""
+    with open(file_path, "rb") as f:
+        f.seek(start)
+        remaining = end - start + 1
+        while remaining > 0:
+            read_len = min(chunk_size, remaining)
+            chunk = f.read(read_len)
+            if not chunk:
+                break
+            remaining -= len(chunk)
+            yield chunk
+
+
+@app.api_route("/api/stream/{filename}", methods=["GET", "HEAD"])
+async def stream_media(filename: str, request: Request):
+    safe_name = Path(filename).name
+    file_path = EXPORTS_DIR / safe_name
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(path=str(file_path), filename=filename, media_type="application/octet-stream")
+
+    if not safe_name.lower().endswith(".mp4"):
+        media_type = "image/png" if safe_name.lower().endswith(".png") else "image/jpeg"
+        return FileResponse(
+            path=str(file_path),
+            media_type=media_type,
+            headers={"Cache-Control": "public, max-age=3600"},
+        )
+
+    file_size = file_path.stat().st_size
+    base_headers = {
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "public, max-age=86400",
+    }
+
+    if request.method == "HEAD":
+        return Response(
+            status_code=200,
+            media_type="video/mp4",
+            headers={**base_headers, "Content-Length": str(file_size)},
+        )
+
+    range_header = request.headers.get("range") or request.headers.get("Range")
+    if range_header:
+        m = re.match(r"bytes=(\d*)-(\d*)", range_header.strip())
+        if m:
+            start_s, end_s = m.group(1), m.group(2)
+            if start_s == "" and end_s != "":
+                suffix_len = int(end_s)
+                start = max(0, file_size - suffix_len)
+                end = file_size - 1
+            else:
+                start = int(start_s) if start_s else 0
+                end = int(end_s) if end_s else file_size - 1
+
+            if start >= file_size or start < 0:
+                return Response(
+                    status_code=416,
+                    headers={"Content-Range": f"bytes */{file_size}"},
+                )
+            end = min(end, file_size - 1)
+            content_length = end - start + 1
+            headers = {
+                **base_headers,
+                "Content-Range": f"bytes {start}-{end}/{file_size}",
+                "Content-Length": str(content_length),
+            }
+            return StreamingResponse(
+                _iter_file_range(file_path, start, end, chunk_size=262144),
+                status_code=206,
+                media_type="video/mp4",
+                headers=headers,
+            )
+
+    return StreamingResponse(
+        _iter_file_range(file_path, 0, max(0, file_size - 1), chunk_size=262144),
+        status_code=200,
+        media_type="video/mp4",
+        headers={**base_headers, "Content-Length": str(file_size)},
+    )
+
+
+@app.api_route("/api/download/{filename}", methods=["GET", "HEAD"])
+async def download_clip(filename: str, request: Request):
+    safe_name = Path(filename).name
+    file_path = EXPORTS_DIR / safe_name
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    file_size = file_path.stat().st_size
+    media_type = "video/mp4" if safe_name.lower().endswith(".mp4") else "application/octet-stream"
+    headers = {
+        "Content-Disposition": f'attachment; filename="{safe_name}"',
+        "Content-Length": str(file_size),
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "public, max-age=86400",
+    }
+    if request.method == "HEAD":
+        return Response(status_code=200, media_type=media_type, headers=headers)
+
+    return StreamingResponse(
+        _iter_file_range(file_path, 0, max(0, file_size - 1), chunk_size=524288),
+        status_code=200,
+        media_type=media_type,
+        headers=headers,
+    )
 
 @app.delete("/api/clips/{clip_id}")
 async def delete_clip(clip_id: str):
@@ -298,7 +397,8 @@ async def get_branding():
 
 @app.post("/api/branding")
 async def update_branding(req: BrandConfigRequest):
-    updates = {k: v for k, v in req.dict().items() if v is not None}
+    raw = req.model_dump() if hasattr(req, "model_dump") else req.dict()
+    updates = {k: v for k, v in raw.items() if v is not None}
     if "channel_handle" in updates and not updates.get("watermark_text"):
         updates["watermark_text"] = updates["channel_handle"]
     saved = save_brand_config(updates)
@@ -399,7 +499,6 @@ class DirectLinkRequest(BaseModel):
 
 @app.post("/api/social/link-direct")
 async def link_social_direct(req: DirectLinkRequest):
-    import time
     from core.browser_auth import get_status_file, PROFILES_DIR
     
     status_file = get_status_file(req.platform)
