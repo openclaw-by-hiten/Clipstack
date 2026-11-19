@@ -53,14 +53,25 @@ def _get_cascades():
     global _CASCADES_CACHE
     if _CASCADES_CACHE is not None:
         return _CASCADES_CACHE
-    base = cv2.data.haarcascades
+    classifier_cls = getattr(cv2, "CascadeClassifier", None) or getattr(
+        getattr(cv2, "objdetect", None), "CascadeClassifier", None
+    )
+    data_mod = getattr(cv2, "data", None)
+    base = getattr(data_mod, "haarcascades", None) if data_mod is not None else None
+    if classifier_cls is None or not base:
+        _CASCADES_CACHE = (None, None, None)
+        return _CASCADES_CACHE
+
     frontal_p = os.path.join(base, "haarcascade_frontalface_default.xml")
     profile_p = os.path.join(base, "haarcascade_profileface.xml")
     upper_p = os.path.join(base, "haarcascade_upperbody.xml")
 
-    frontal = cv2.CascadeClassifier(frontal_p) if os.path.exists(frontal_p) else None
-    profile = cv2.CascadeClassifier(profile_p) if os.path.exists(profile_p) else None
-    upper = cv2.CascadeClassifier(upper_p) if os.path.exists(upper_p) else None
+    try:
+        frontal = classifier_cls(frontal_p) if os.path.exists(frontal_p) else None
+        profile = classifier_cls(profile_p) if os.path.exists(profile_p) else None
+        upper = classifier_cls(upper_p) if os.path.exists(upper_p) else None
+    except Exception:
+        frontal, profile, upper = None, None, None
     _CASCADES_CACHE = (frontal, profile, upper)
     return _CASCADES_CACHE
 
