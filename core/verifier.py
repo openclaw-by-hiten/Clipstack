@@ -1,5 +1,6 @@
 import os
 import subprocess
+import uuid
 from typing import List, Dict
 from core.config import WORKSPACE_DIR, MAX_CLIPS_PER_SESSION
 from core.ingestion import download_youtube_video_section
@@ -50,6 +51,7 @@ def verify_and_select_clips_streaming(
                 break
 
     tested_count = 0
+    run_uid = uuid.uuid4().hex[:8]
 
     if progress_callback:
         progress_callback(f"Starting On-Demand Neural Verification (Target: {target_count} clips of {target_duration}s)...")
@@ -67,8 +69,8 @@ def verify_and_select_clips_streaming(
         if is_overlapping(cand["start"], cand["end"], accepted):
             continue
 
-        cand_slice_video = str(WORKSPACE_DIR / f"temp_slice_{tested_count}.mp4")
-        cand_slice_audio = str(WORKSPACE_DIR / f"temp_slice_{tested_count}.wav")
+        cand_slice_video = str(WORKSPACE_DIR / f"temp_slice_{run_uid}_{tested_count}.mp4")
+        cand_slice_audio = str(WORKSPACE_DIR / f"temp_slice_{run_uid}_{tested_count}.wav")
 
         if progress_callback:
             progress_callback(
