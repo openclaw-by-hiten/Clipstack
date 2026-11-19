@@ -33,6 +33,8 @@ def verify_and_select_clips_streaming(
     """
     target_count = min(target_count, MAX_CLIPS_PER_SESSION)
     accepted = []
+    rejected_pool = []
+    total_candidates = len(candidates)
     
     threshold_map = {30: 60.0, 60: 58.0, 90: 55.0, 180: 52.0}
     current_threshold = threshold_map.get(target_duration, 58.0)
@@ -117,35 +119,45 @@ def verify_and_select_clips_streaming(
             score_data = scorer.score_slice(cand_slice_video, cand_slice_audio, rel_words)
             overall_score = score_data["overall_score"]
 
+            cand_copy = dict(cand)
+            cand_copy["neural_score"] = overall_score
+            cand_copy["hook_score"] = score_data["hook_score"]
+            cand_copy["mid_score"] = score_data["mid_score"]
+            cand_copy["payoff_score"] = score_data["payoff_score"]
+            cand_copy["curve"] = score_data["curve"]
+            cand_copy["slice_video_path"] = cand_slice_video
+
+            if os.path.exists(cand_slice_audio):
+                try:
+                    os.remove(cand_slice_audio)
+                except OSError:
+                    pass
+
             # 3. Decision Loop
-            if overall_score >= current_threshold or tested_count >= 5:
+            # Auto-approve when score clears threshold, after 5 attempts, or when no other candidates remain
+            remaining_after_this = total_candidates - (i + 1)
+            needed_now = target_count - len(accepted)
+            is_only_option = (total_candidates <= target_count) or (len(accepted) == 0 and remaining_after_this == 0 and not rejected_pool)
+
+            if overall_score >= current_threshold or tested_count >= 5 or is_only_option:
                 # Clip approved!
                 if progress_callback:
+                    tag = "Best Available Match" if overall_score < current_threshold else "Neural Retention Score"
                     progress_callback(
-                        f"APPROVED Clip #{len(accepted)+1}! Neural Retention Score: {overall_score}% "
+                        f"APPROVED Clip #{len(accepted)+1}! {tag}: {overall_score}% "
                         f"(Hook Score: {score_data['hook_score']}%)"
                     )
 
-                cand_copy = dict(cand)
-                cand_copy["neural_score"] = overall_score
-                cand_copy["hook_score"] = score_data["hook_score"]
-                cand_copy["mid_score"] = score_data["mid_score"]
-                cand_copy["payoff_score"] = score_data["payoff_score"]
-                cand_copy["curve"] = score_data["curve"]
-                cand_copy["slice_video_path"] = cand_slice_video
                 accepted.append(cand_copy)
                 if len(accepted) >= target_count:
                     break  # Target achieved!
             else:
                 if progress_callback:
                     progress_callback(
-                        f"Candidate rejected ({overall_score}% < {current_threshold}%). "
-                        "Re-running loop to find a higher retention moment..."
+                        f"Candidate below threshold ({overall_score}% < {current_threshold}%). "
+                        f"Checking next candidate (saving as backup if needed)..."
                     )
-                if os.path.exists(cand_slice_video):
-                    os.remove(cand_slice_video)
-                if os.path.exists(cand_slice_audio):
-                    os.remove(cand_slice_audio)
+                rejected_pool.append(cand_copy)
 
         except Exception as e:
             print(f"Error testing candidate {cand['start']}: {e}")
@@ -154,6 +166,36 @@ def verify_and_select_clips_streaming(
                     os.remove(cand_slice_video)
                 except Exception:
                     pass
+            if os.path.exists(cand_slice_audio):
+                try:
+                    os.remove(cand_slice_audio)
+                except Exception:
+                    pass
             continue
+
+    # 4. Graceful Fallback: if fewer than target_count cleared the strict gate,
+    # promote the highest-scoring non-overlapping candidates from rejected_pool so we never fail with 0 clips
+    if len(accepted) < target_count and rejected_pool:
+        rejected_pool.sort(key=lambda c: c.get("neural_score", 0.0), reverse=True)
+        for cand_copy in rejected_pool:
+            if len(accepted) >= target_count:
+                break
+            if not is_overlapping(cand_copy["start"], cand_copy["end"], accepted):
+                if progress_callback:
+                    progress_callback(
+                        f"APPROVED Clip #{len(accepted)+1} (Top Ranked Fallback: {cand_copy['neural_score']}%, "
+                        f"Hook Score: {cand_copy['hook_score']}%)"
+                    )
+                accepted.append(cand_copy)
+
+    # Clean up unused backup slice files
+    accepted_paths = {c.get("slice_video_path") for c in accepted}
+    for cand_copy in rejected_pool:
+        p = cand_copy.get("slice_video_path")
+        if p and p not in accepted_paths and os.path.exists(p):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
 
     return accepted
