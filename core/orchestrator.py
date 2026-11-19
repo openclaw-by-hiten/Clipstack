@@ -170,6 +170,10 @@ class ClipPipelineOrchestrator:
             if custom_thumbnail_path and os.path.exists(custom_thumbnail_path):
                 clip_custom_thumb = custom_thumbnail_path
             else:
+                emit(
+                    f"Generating 8K topic-matched AI thumbnail for Clip {i}/{total_clips}...",
+                    min(94, step_percent),
+                )
                 from core.thumbnail_generator import generate_clip_thumbnail
                 clip_custom_thumb = generate_clip_thumbnail(
                     video_path=slice_source,
@@ -184,6 +188,10 @@ class ClipPipelineOrchestrator:
                     use_ai=ai_thumbnail,
                 )
 
+            emit(
+                f"Encoding Clip {i}/{total_clips} [{aspect_ratio} • {layout_used}] with FFmpeg web-faststart...",
+                min(97, step_percent),
+            )
             final_mp4 = str(EXPORTS_DIR / f"{clip_id}.mp4")
             render_clip(
                 source_video=slice_source,
