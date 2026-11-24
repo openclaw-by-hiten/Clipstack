@@ -45,8 +45,10 @@ def _detect_pyscenedetect_cuts(video_path: str) -> list[float]:
     try:
         video = open_video(video_path)
         scene_manager = SceneManager()
+        scene_manager.auto_downscale = True
+        scene_manager.downscale = 4
         scene_manager.add_detector(ContentDetector(threshold=27.0, min_scene_len=12))
-        scene_manager.detect_scenes(video, frame_skip=2)
+        scene_manager.detect_scenes(video, frame_skip=4)
         scene_list = scene_manager.get_scene_list()
         cuts = [round(sc[0].get_seconds(), 2) for sc in scene_list[1:]]
         if cuts:
@@ -152,15 +154,15 @@ def _get_yolo_model():
 
 def _detect_yolo_fallback_subjects(frame_bgr: np.ndarray, diff_full: np.ndarray | None) -> list:
     """
-    Runs YOLO11n ONLY on frames with zero detected faces to track cars, athletes,
-    motorcycles, pets, or game action cleanly in 9:16!
+    Runs YOLO11n on CPU (0 GB GPU VRAM!) ONLY on frames with zero detected faces to track
+    cars, athletes, motorcycles, pets, or game action cleanly in 9:16.
     """
     model = _get_yolo_model()
     if model is None:
         return []
     h, w = frame_bgr.shape[:2]
     try:
-        results = model.predict(frame_bgr, imgsz=384, conf=0.38, verbose=False)
+        results = model.predict(frame_bgr, imgsz=320, conf=0.40, device="cpu", verbose=False)
         out = []
         for r in results:
             if r.boxes is None:
@@ -431,6 +433,7 @@ def detect_subjects_in_frame(
     next_frame_bgr: np.ndarray | None = None,
     yunet=None,
     yunet_size: tuple[int, int] | None = None,
+    allow_yolo: bool = True,
 ) -> tuple[list, dict]:
     """
     Detects human faces & active speakers in a single BGR frame using YuNet CNN +
@@ -554,7 +557,7 @@ def detect_subjects_in_frame(
         _boost_active_speaker_with_mediapipe(frame_bgr, next_frame_bgr, merged)
 
     # 4. Ultralytics YOLO11n Non-Human Subject Tracking (cars, athletes, motorcycles, pets, action)
-    if len(merged) == 0:
+    if len(merged) == 0 and allow_yolo:
         yolo_subs = _detect_yolo_fallback_subjects(frame_bgr, diff_full)
         if yolo_subs:
             merged = _merge_subjects(yolo_subs)
@@ -716,6 +719,7 @@ def analyze_video_subjects(video_path: str, clip_duration: float) -> dict:
             next_frame_bgr=next_frame,
             yunet=yunet,
             yunet_size=(det_w, det_h),
+            allow_yolo=(i % 3 == 0),
         )
 
         gray_s = metrics["gray_small"]

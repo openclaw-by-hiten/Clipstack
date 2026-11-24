@@ -1,3 +1,4 @@
+import gc
 import os
 import json
 import uuid
@@ -144,9 +145,15 @@ class ClipPipelineOrchestrator:
             slice_source = orig_slice_source
             trimmed_dead_air_sec = 0.0
 
-            # Phase 1: Optional Dead-Air / Silence Trimmer (auto-editor / FFmpeg silence killer)
+            # Smooth monotonic progress band per clip across [82% .. 99%]
+            band_start = 82.0 + ((i - 1) / total_clips) * 17.0
+            band_span = 17.0 / total_clips
+            def _clip_pct(frac: float) -> int:
+                return min(99, int(round(band_start + band_span * frac)))
+
+            # Phase 1: Optional Dead-Air / Silence Trimmer (fast non-blocking FFmpeg silence killer)
             if kill_dead_air:
-                emit(f"Trimming dead air & silent pauses on Clip {i}/{total_clips}...", 83)
+                emit(f"Trimming dead air & silent pauses on Clip {i}/{total_clips}...", _clip_pct(0.10))
                 try:
                     from core.silence_trimmer import trim_dead_air
                     new_src, new_dur, saved_s = trim_dead_air(slice_source)
@@ -158,6 +165,7 @@ class ClipPipelineOrchestrator:
                     print(f"[Orchestrator] Dead-air trim fallback: {e}")
 
             # Phase 2: AI Auto-Align (PySceneDetect cuts + MediaPipe Lip Lock + YOLO11n + YuNet)
+            emit(f"Analyzing scene cuts & active speakers on Clip {i}/{total_clips}...", _clip_pct(0.25))
             reframe_plan = generate_reframe_plan(
                 video_path=slice_source,
                 clip_duration=c_dur,
@@ -166,10 +174,9 @@ class ClipPipelineOrchestrator:
             )
             layout_used = reframe_plan["layout_used"]
 
-            step_percent = int(84 + (i / total_clips) * 14)
             emit(
                 f"Syncing captions & framing Clip {i}/{total_clips} [{aspect_ratio} • {layout_used}]...",
-                min(88, step_percent),
+                _clip_pct(0.45),
             )
 
             # Phase 1: Millisecond Word-Level Forced Alignment (WhisperX / Faster-Whisper on clip slice)
@@ -242,7 +249,7 @@ class ClipPipelineOrchestrator:
             else:
                 emit(
                     f"Generating 8K topic-matched AI thumbnail for Clip {i}/{total_clips}...",
-                    min(93, step_percent),
+                    _clip_pct(0.68),
                 )
                 from core.thumbnail_generator import generate_clip_thumbnail
                 clip_custom_thumb = generate_clip_thumbnail(
@@ -261,7 +268,7 @@ class ClipPipelineOrchestrator:
 
             emit(
                 f"Encoding Clip {i}/{total_clips} [{aspect_ratio} • {layout_used}{' • 60fps' if enable_60fps else ''}] + Studio Audio...",
-                min(97, step_percent),
+                _clip_pct(0.86),
             )
             final_mp4 = str(EXPORTS_DIR / f"{clip_id}.mp4")
             render_clip(
@@ -292,6 +299,15 @@ class ClipPipelineOrchestrator:
                         os.remove(temp_p)
                     except Exception:
                         pass
+
+            # Free per-clip temporary RAM/VRAM buffers cleanly between multi-clip renders
+            gc.collect()
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            except Exception:
+                pass
 
             file_size_mb = round(os.path.getsize(final_mp4) / (1024 * 1024), 2) if os.path.exists(final_mp4) else 0.0
 
