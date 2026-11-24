@@ -62,6 +62,10 @@ def render_clip(
     enable_grain: bool = False,
     bgm_path: str = None,
     custom_thumbnail_path: str = None,
+    enable_60fps: bool = False,
+    studio_audio: bool = True,
+    strip_music: bool = False,
+    hook_voiceover_wav: str = None,
 ) -> str:
     """
     Renders the final viral clip:
@@ -165,28 +169,29 @@ def render_clip(
 
     temp_clip_video = output_mp4.replace(".mp4", "_temp.mp4")
 
-    # Choose GPU NVENC or fast web-optimized libx264 (~1.8-2.4 Mbps -> ~9-13 MB per 60s!)
+    # Choose GPU NVENC or fast web-optimized libx264 (boost bitrate cleanly when 60fps is enabled!)
     use_nvenc = _has_nvenc()
+    fps_opts = ["-r", "60"] if enable_60fps else []
     if use_nvenc:
         v_enc_opts = [
             "-c:v", "h264_nvenc",
             "-preset", "p4",
             "-rc", "vbr",
-            "-cq", "24",
-            "-b:v", "2200k",
-            "-maxrate", "2800k",
-            "-bufsize", "5600k",
+            "-cq", "22" if enable_60fps else "24",
+            "-b:v", "3400k" if enable_60fps else "2200k",
+            "-maxrate", "4400k" if enable_60fps else "2800k",
+            "-bufsize", "8800k" if enable_60fps else "5600k",
             "-profile:v", "high",
-        ]
+        ] + fps_opts
     else:
         v_enc_opts = [
             "-c:v", "libx264",
             "-preset", "veryfast",
-            "-crf", "23",
-            "-maxrate", "2500k",
-            "-bufsize", "5000k",
+            "-crf", "22" if enable_60fps else "23",
+            "-maxrate", "3800k" if enable_60fps else "2500k",
+            "-bufsize", "7600k" if enable_60fps else "5000k",
             "-profile:v", "high",
-        ]
+        ] + fps_opts
 
     def _build_ffmpeg_cmd(enc_opts: list) -> list:
         return (
@@ -226,13 +231,60 @@ def render_clip(
         else:
             raise
 
-    # 7. Background Music & Audio Ducking (preserving +faststart!)
+    # 7. Studio Audio Mastering (-14 LUFS + DeepFilterNet/Demucs) + Optional Hook Voiceover + BGM Ducking
+    mastered_audio = None
+    if studio_audio or strip_music:
+        try:
+            from core.audio_enhancer import enhance_clip_audio
+            mastered_aac = output_mp4.replace(".mp4", "_studio.aac")
+            mastered_audio = enhance_clip_audio(
+                source_video=temp_clip_video,
+                output_audio_aac=mastered_aac,
+                studio_voice=studio_audio,
+                strip_music=strip_music,
+            )
+        except Exception as e:
+            print(f"[Renderer] Studio audio skip: {e}")
+
+    # Optional Chatterbox/TTS spoken viral hook overlay at t=0 (ducks original clip audio briefly)
+    if hook_voiceover_wav and os.path.exists(hook_voiceover_wav):
+        try:
+            base_a = mastered_audio if (mastered_audio and os.path.exists(mastered_audio)) else temp_clip_video
+            hook_mixed = output_mp4.replace(".mp4", "_hookmix.aac")
+            subprocess.run(
+                [
+                    "ffmpeg", "-y",
+                    "-i", base_a,
+                    "-i", hook_voiceover_wav,
+                    "-filter_complex",
+                    "[0:a][1:a]sidechaincompress=threshold=0.03:ratio=5:attack=40:release=450[ducked];"
+                    "[ducked][1:a]amix=inputs=2:duration=first:dropout_transition=2,loudnorm=I=-14:TP=-1.5:LRA=11[aout]",
+                    "-map", "[aout]",
+                    "-c:a", "aac", "-b:a", "192k",
+                    hook_mixed,
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True,
+                timeout=45,
+            )
+            if os.path.exists(hook_mixed) and os.path.getsize(hook_mixed) > 4000:
+                if mastered_audio and os.path.exists(mastered_audio):
+                    try:
+                        os.remove(mastered_audio)
+                    except OSError:
+                        pass
+                mastered_audio = hook_mixed
+        except Exception as e:
+            print(f"[Renderer] Hook voiceover mix warning: {e}")
+
     if bgm_path and os.path.exists(bgm_path):
         speech_audio = output_mp4.replace(".mp4", "_speech.wav")
         ducked_audio = output_mp4.replace(".mp4", "_ducked.aac")
+        audio_in = mastered_audio if (mastered_audio and os.path.exists(mastered_audio)) else temp_clip_video
 
         subprocess.run(
-            ["ffmpeg", "-y", "-i", temp_clip_video, "-vn", speech_audio],
+            ["ffmpeg", "-y", "-i", audio_in, "-vn", speech_audio],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             check=True,
@@ -256,9 +308,35 @@ def render_clip(
             check=True,
         )
 
-        for p in [temp_clip_video, speech_audio, ducked_audio]:
-            if os.path.exists(p):
-                os.remove(p)
+        for p in [temp_clip_video, speech_audio, ducked_audio, mastered_audio]:
+            if p and os.path.exists(p):
+                try:
+                    os.remove(p)
+                except OSError:
+                    pass
+    elif mastered_audio and os.path.exists(mastered_audio):
+        subprocess.run(
+            [
+                "ffmpeg", "-y",
+                "-i", temp_clip_video,
+                "-i", mastered_audio,
+                "-map", "0:v",
+                "-map", "1:a",
+                "-c:v", "copy",
+                "-c:a", "copy",
+                "-movflags", "+faststart",
+                output_mp4,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+        for p in [temp_clip_video, mastered_audio]:
+            if p and os.path.exists(p):
+                try:
+                    os.remove(p)
+                except OSError:
+                    pass
     else:
         if os.path.exists(output_mp4):
             os.remove(output_mp4)

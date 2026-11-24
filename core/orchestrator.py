@@ -48,6 +48,14 @@ class ClipPipelineOrchestrator:
         bgm_path = request_params.get("bgm_path")
         ai_thumbnail = request_params.get("ai_thumbnail", True)
         custom_thumbnail_path = request_params.get("custom_thumbnail_path")
+        # ClipStack v3 Pro Engine flags (Phases 1-3)
+        kill_dead_air = bool(request_params.get("kill_dead_air", False))
+        word_align = bool(request_params.get("word_align", True))
+        studio_audio = bool(request_params.get("studio_audio", True))
+        strip_music = bool(request_params.get("strip_music", False))
+        enable_visual_hype = bool(request_params.get("enable_visual_hype", True))
+        enable_60fps = bool(request_params.get("enable_60fps", False))
+        hook_voiceover_text = (request_params.get("hook_voiceover_text") or "").strip() or None
 
         def emit(msg: str, percent: int = 0):
             print(f"[{session_id}] ({percent}%) {msg}")
@@ -115,6 +123,8 @@ class ClipPipelineOrchestrator:
             target_count=clip_count,
             target_duration=target_duration,
             progress_callback=lambda m: emit(m, 75),
+            source_title=video_title,
+            enable_visual_hype=enable_visual_hype,
         )
 
         if not verified_clips:
@@ -130,9 +140,24 @@ class ClipPipelineOrchestrator:
             c_start = clip["start"]
             c_end = clip["end"]
             c_dur = clip["duration"]
-            slice_source = clip["slice_video_path"]
+            orig_slice_source = clip["slice_video_path"]
+            slice_source = orig_slice_source
+            trimmed_dead_air_sec = 0.0
 
-            # Compute AI Auto-Align reframe plan ONCE for both subtitle safe-zones & video rendering
+            # Phase 1: Optional Dead-Air / Silence Trimmer (auto-editor / FFmpeg silence killer)
+            if kill_dead_air:
+                emit(f"Trimming dead air & silent pauses on Clip {i}/{total_clips}...", 83)
+                try:
+                    from core.silence_trimmer import trim_dead_air
+                    new_src, new_dur, saved_s = trim_dead_air(slice_source)
+                    if saved_s > 0.0 and new_src != slice_source:
+                        slice_source = new_src
+                        c_dur = new_dur
+                        trimmed_dead_air_sec = round(saved_s, 2)
+                except Exception as e:
+                    print(f"[Orchestrator] Dead-air trim fallback: {e}")
+
+            # Phase 2: AI Auto-Align (PySceneDetect cuts + MediaPipe Lip Lock + YOLO11n + YuNet)
             reframe_plan = generate_reframe_plan(
                 video_path=slice_source,
                 clip_duration=c_dur,
@@ -141,23 +166,58 @@ class ClipPipelineOrchestrator:
             )
             layout_used = reframe_plan["layout_used"]
 
-            step_percent = int(82 + (i / total_clips) * 16)
+            step_percent = int(84 + (i / total_clips) * 14)
             emit(
-                f"Rendering Clip {i}/{total_clips} [{aspect_ratio} • {layout_used}] with web-faststart optimization...",
-                step_percent,
+                f"Syncing captions & framing Clip {i}/{total_clips} [{aspect_ratio} • {layout_used}]...",
+                min(88, step_percent),
             )
 
+            # Phase 1: Millisecond Word-Level Forced Alignment (WhisperX / Faster-Whisper on clip slice)
             ass_path = str(WORKSPACE_DIR / f"{clip_id}.ass")
-            generate_ass_subtitles(
-                words=words,
-                clip_start=c_start,
-                clip_end=c_end,
-                output_path=ass_path,
-                theme_key=caption_theme,
-                aspect_ratio=aspect_ratio,
-                margin_v_override=reframe_plan.get("caption_margin_v"),
-                alignment_override=reframe_plan.get("caption_alignment"),
-            )
+            if word_align or trimmed_dead_air_sec > 0.0:
+                try:
+                    from core.alignment import align_clip_words
+                    aligned_words = align_clip_words(
+                        slice_video_path=slice_source,
+                        fallback_words=words,
+                        clip_start=c_start,
+                        clip_end=c_end,
+                        language=detected_lang,
+                        force_retranscribe=(trimmed_dead_air_sec > 0.0),
+                    )
+                    generate_ass_subtitles(
+                        words=aligned_words,
+                        clip_start=0.0,
+                        clip_end=c_dur + 0.25,
+                        output_path=ass_path,
+                        theme_key=caption_theme,
+                        aspect_ratio=aspect_ratio,
+                        margin_v_override=reframe_plan.get("caption_margin_v"),
+                        alignment_override=reframe_plan.get("caption_alignment"),
+                    )
+                except Exception as e:
+                    print(f"[Orchestrator] Word alignment fallback: {e}")
+                    generate_ass_subtitles(
+                        words=words,
+                        clip_start=c_start,
+                        clip_end=c_end,
+                        output_path=ass_path,
+                        theme_key=caption_theme,
+                        aspect_ratio=aspect_ratio,
+                        margin_v_override=reframe_plan.get("caption_margin_v"),
+                        alignment_override=reframe_plan.get("caption_alignment"),
+                    )
+            else:
+                generate_ass_subtitles(
+                    words=words,
+                    clip_start=c_start,
+                    clip_end=c_end,
+                    output_path=ass_path,
+                    theme_key=caption_theme,
+                    aspect_ratio=aspect_ratio,
+                    margin_v_override=reframe_plan.get("caption_margin_v"),
+                    alignment_override=reframe_plan.get("caption_alignment"),
+                )
 
             smart_clip_title = (
                 header_title.strip()
@@ -166,13 +226,23 @@ class ClipPipelineOrchestrator:
             )
             effective_header = header_title.strip() if (header_title and header_title.strip()) else None
 
+            # Phase 3: Optional AI Spoken Hook Voiceover (Chatterbox / edge-tts)
+            hook_vo_wav = None
+            if hook_voiceover_text:
+                try:
+                    from core.hook_voiceover import generate_hook_voiceover
+                    vo_path = str(WORKSPACE_DIR / f"{clip_id}_hook_vo.wav")
+                    hook_vo_wav = generate_hook_voiceover(hook_voiceover_text, vo_path)
+                except Exception as e:
+                    print(f"[Orchestrator] Hook voiceover skip: {e}")
+
             clip_thumb_path = str(EXPORTS_DIR / f"{clip_id}_thumb.jpg")
             if custom_thumbnail_path and os.path.exists(custom_thumbnail_path):
                 clip_custom_thumb = custom_thumbnail_path
             else:
                 emit(
                     f"Generating 8K topic-matched AI thumbnail for Clip {i}/{total_clips}...",
-                    min(94, step_percent),
+                    min(93, step_percent),
                 )
                 from core.thumbnail_generator import generate_clip_thumbnail
                 clip_custom_thumb = generate_clip_thumbnail(
@@ -186,10 +256,11 @@ class ClipPipelineOrchestrator:
                     source_title=video_title,
                     aspect_ratio=aspect_ratio,
                     use_ai=ai_thumbnail,
+                    visual_summary=clip.get("visual_summary"),
                 )
 
             emit(
-                f"Encoding Clip {i}/{total_clips} [{aspect_ratio} • {layout_used}] with FFmpeg web-faststart...",
+                f"Encoding Clip {i}/{total_clips} [{aspect_ratio} • {layout_used}{' • 60fps' if enable_60fps else ''}] + Studio Audio...",
                 min(97, step_percent),
             )
             final_mp4 = str(EXPORTS_DIR / f"{clip_id}.mp4")
@@ -209,13 +280,18 @@ class ClipPipelineOrchestrator:
                 enable_grain=enable_grain,
                 bgm_path=bgm_path,
                 custom_thumbnail_path=clip_custom_thumb,
+                enable_60fps=enable_60fps,
+                studio_audio=studio_audio,
+                strip_music=strip_music,
+                hook_voiceover_wav=hook_vo_wav,
             )
 
-            if os.path.exists(slice_source):
-                try:
-                    os.remove(slice_source)
-                except Exception:
-                    pass
+            for temp_p in {slice_source, orig_slice_source, hook_vo_wav}:
+                if temp_p and os.path.exists(temp_p):
+                    try:
+                        os.remove(temp_p)
+                    except Exception:
+                        pass
 
             file_size_mb = round(os.path.getsize(final_mp4) / (1024 * 1024), 2) if os.path.exists(final_mp4) else 0.0
 
@@ -236,6 +312,10 @@ class ClipPipelineOrchestrator:
                 "file_size_mb": file_size_mb,
                 "neural_score": clip.get("neural_score", 82.0),
                 "hook_score": clip.get("hook_score", 84.0),
+                "visual_score": clip.get("visual_score"),
+                "visual_summary": clip.get("visual_summary", ""),
+                "trimmed_dead_air_sec": trimmed_dead_air_sec,
+                "enable_60fps": enable_60fps,
                 "video_url": f"/api/stream/{clip_id}.mp4",
                 "download_url": f"/api/download/{clip_id}.mp4",
                 "thumb_url": f"/api/stream/{clip_id}_thumb.jpg",

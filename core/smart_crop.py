@@ -12,6 +12,182 @@ YUNET_FALLBACK_URL = (
 )
 
 _CASCADES_CACHE = None
+_MP_FACE_MESH = None
+_MP_CHECKED = False
+_YOLO_MODEL = None
+_YOLO_CHECKED = False
+
+_YOLO_INTEREST_CLASSES = {
+    0: 1.0,   # person
+    1: 1.2,   # bicycle
+    2: 1.35,  # car
+    3: 1.35,  # motorcycle
+    5: 1.1,   # bus
+    7: 1.15,  # truck
+    8: 1.2,   # boat
+    15: 1.2,  # cat
+    16: 1.25, # dog
+    17: 1.2,  # horse
+    32: 1.4,  # sports ball
+}
+
+
+def _detect_pyscenedetect_cuts(video_path: str) -> list[float]:
+    """
+    Uses PySceneDetect (ContentDetector) if installed to find exact camera cut timestamps (seconds).
+    Returns [] gracefully if scenedetect isn't installed or fails.
+    """
+    try:
+        from scenedetect import ContentDetector, open_video, SceneManager
+    except Exception:
+        return []
+
+    try:
+        video = open_video(video_path)
+        scene_manager = SceneManager()
+        scene_manager.add_detector(ContentDetector(threshold=27.0, min_scene_len=12))
+        scene_manager.detect_scenes(video, frame_skip=2)
+        scene_list = scene_manager.get_scene_list()
+        cuts = [round(sc[0].get_seconds(), 2) for sc in scene_list[1:]]
+        if cuts:
+            print(f"[SmartCrop] PySceneDetect found {len(cuts)} exact camera cuts.")
+        return cuts
+    except Exception as e:
+        print(f"[SmartCrop] PySceneDetect fallback notice: {e}")
+        return []
+
+
+def _get_mediapipe_face_mesh():
+    """Lazy-loads MediaPipe FaceMesh for inner-lip active-speaker tracking."""
+    global _MP_FACE_MESH, _MP_CHECKED
+    if _MP_CHECKED:
+        return _MP_FACE_MESH
+    _MP_CHECKED = True
+    try:
+        import mediapipe as mp
+        if hasattr(mp, "solutions") and hasattr(mp.solutions, "face_mesh"):
+            _MP_FACE_MESH = mp.solutions.face_mesh.FaceMesh(
+                static_image_mode=True,
+                max_num_faces=3,
+                refine_landmarks=False,
+                min_detection_confidence=0.45,
+            )
+            print("[SmartCrop] MediaPipe FaceMesh Active-Speaker Lip Lock enabled.")
+    except Exception:
+        _MP_FACE_MESH = None
+    return _MP_FACE_MESH
+
+
+def _boost_active_speaker_with_mediapipe(
+    frame_bgr: np.ndarray,
+    next_frame_bgr: np.ndarray | None,
+    subjects: list,
+):
+    """
+    Measures real inner-lip opening (landmarks #13 upper lip vs #14 lower lip) on detected faces
+    so multi-person podcasts/streams lock onto the person actually speaking!
+    """
+    if not subjects or next_frame_bgr is None:
+        return
+    face_subs = [s for s in subjects if s.get("is_face")]
+    if len(face_subs) < 2:
+        return
+    mesh = _get_mediapipe_face_mesh()
+    if mesh is None:
+        return
+
+    h, w = frame_bgr.shape[:2]
+    try:
+        rgb1 = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        rgb2 = cv2.cvtColor(next_frame_bgr, cv2.COLOR_BGR2RGB)
+        res1 = mesh.process(rgb1)
+        res2 = mesh.process(rgb2)
+        if not res1.multi_face_landmarks:
+            return
+
+        def _mouth_metrics(face_lms):
+            lm = face_lms.landmark
+            cx = int(round(lm[1].x * w))
+            cy = int(round(lm[1].y * h))
+            lip_open = abs(lm[14].y - lm[13].y)
+            face_h = max(1e-4, abs(lm[152].y - lm[10].y))
+            return cx, cy, lip_open / face_h
+
+        m1 = [_mouth_metrics(fl) for fl in res1.multi_face_landmarks]
+        m2 = [_mouth_metrics(fl) for fl in (res2.multi_face_landmarks or [])]
+
+        for sub in face_subs:
+            sx1, sy1, sx2, sy2 = sub["x1"], sub["y1"], sub["x2"], sub["y2"]
+            for cx1, cy1, mar1 in m1:
+                if sx1 <= cx1 <= sx2 and sy1 <= cy1 <= sy2:
+                    # Match closest face in adjacent frame to compute lip movement delta
+                    mar_delta = mar1 * 0.45
+                    for cx2, cy2, mar2 in m2:
+                        if abs(cx2 - cx1) < (sx2 - sx1) * 0.4 and abs(cy2 - cy1) < (sy2 - sy1) * 0.4:
+                            mar_delta = abs(mar2 - mar1) + mar1 * 0.35
+                            break
+                    # Amplify active speaker score strongly when lips are actively moving
+                    sub["activity"] = float(sub.get("activity", 0.0)) + (mar_delta * 180.0)
+                    break
+    except Exception:
+        pass
+
+
+def _get_yolo_model():
+    """Lazy-loads lightweight Ultralytics YOLO11n (6MB) for non-human subject tracking."""
+    global _YOLO_MODEL, _YOLO_CHECKED
+    if _YOLO_CHECKED:
+        return _YOLO_MODEL
+    _YOLO_CHECKED = True
+    try:
+        from ultralytics import YOLO
+        weights_p = MODEL_DIR / "yolo11n.pt"
+        MODEL_DIR.mkdir(parents=True, exist_ok=True)
+        _YOLO_MODEL = YOLO(str(weights_p) if weights_p.exists() else "yolo11n.pt")
+        print("[SmartCrop] Ultralytics YOLO11n non-human subject tracker enabled.")
+    except Exception:
+        _YOLO_MODEL = None
+    return _YOLO_MODEL
+
+
+def _detect_yolo_fallback_subjects(frame_bgr: np.ndarray, diff_full: np.ndarray | None) -> list:
+    """
+    Runs YOLO11n ONLY on frames with zero detected faces to track cars, athletes,
+    motorcycles, pets, or game action cleanly in 9:16!
+    """
+    model = _get_yolo_model()
+    if model is None:
+        return []
+    h, w = frame_bgr.shape[:2]
+    try:
+        results = model.predict(frame_bgr, imgsz=384, conf=0.38, verbose=False)
+        out = []
+        for r in results:
+            if r.boxes is None:
+                continue
+            for box in r.boxes:
+                cls_id = int(box.cls[0])
+                if cls_id not in _YOLO_INTEREST_CLASSES:
+                    continue
+                conf = float(box.conf[0])
+                x1, y1, x2, y2 = [int(round(float(v))) for v in box.xyxy[0].tolist()]
+                x1, y1 = max(0, x1), max(0, y1)
+                x2, y2 = min(w, x2), min(h, y2)
+                area = max(1, (x2 - x1) * (y2 - y1))
+                if area < (w * h) * 0.012 or area > (w * h) * 0.88:
+                    continue
+                act = _compute_subject_activity(diff_full, x1, y1, x2, y2, w, h)
+                out.append({
+                    "x1": x1, "y1": y1, "x2": x2, "y2": y2,
+                    "weight": float(area) * _YOLO_INTEREST_CLASSES[cls_id] * conf,
+                    "is_face": False,
+                    "conf": conf,
+                    "activity": act,
+                    "facing": 0,
+                })
+        return out
+    except Exception:
+        return []
 
 
 def _ensure_yunet_model() -> str | None:
@@ -373,7 +549,17 @@ def detect_subjects_in_frame(
         if extra:
             merged = _merge_subjects(merged + extra)
 
-    # 4. Upper-body fallback when zero faces are visible
+    # 3b. MediaPipe Active-Speaker Lip Lock (amplifies whoever's lips are actually moving!)
+    if len(merged) >= 2:
+        _boost_active_speaker_with_mediapipe(frame_bgr, next_frame_bgr, merged)
+
+    # 4. Ultralytics YOLO11n Non-Human Subject Tracking (cars, athletes, motorcycles, pets, action)
+    if len(merged) == 0:
+        yolo_subs = _detect_yolo_fallback_subjects(frame_bgr, diff_full)
+        if yolo_subs:
+            merged = _merge_subjects(yolo_subs)
+
+    # 5. Upper-body Haar fallback when zero faces & zero YOLO subjects are visible
     if len(merged) == 0 and upper is not None:
         min_ub = max(40, int(det_h * 0.16))
         det_u = upper.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=3, minSize=(min_ub, min_ub))
@@ -505,8 +691,11 @@ def analyze_video_subjects(video_path: str, clip_duration: float) -> dict:
     yunet = create_yunet_detector(det_w, det_h, score_threshold=0.48)
 
     num_samples = min(46, max(10, int(round(duration / 0.85))))
+    # Exact camera cut timestamps via PySceneDetect (snaps crop instantaneously on shot changes!)
+    pyscene_cuts = _detect_pyscenedetect_cuts(video_path)
     frames_data = []
     prev_sample_gray = None
+    prev_t = -1.0
     side_motion_hits = 0
 
     for i in range(num_samples):
@@ -531,11 +720,15 @@ def analyze_video_subjects(video_path: str, clip_duration: float) -> dict:
 
         gray_s = metrics["gray_small"]
         scene_cut = False
-        if prev_sample_gray is not None and prev_sample_gray.shape == gray_s.shape:
+        if pyscene_cuts and prev_t >= 0.0:
+            if any(prev_t < cut_t <= t for cut_t in pyscene_cuts):
+                scene_cut = True
+        if not scene_cut and prev_sample_gray is not None and prev_sample_gray.shape == gray_s.shape:
             luma_jump = float(np.mean(cv2.absdiff(gray_s, prev_sample_gray)))
             if luma_jump > 33.0:
                 scene_cut = True
         prev_sample_gray = gray_s
+        prev_t = t
 
         if metrics["side_hit"]:
             side_motion_hits += 1

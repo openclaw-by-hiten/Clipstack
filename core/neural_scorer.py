@@ -29,23 +29,46 @@ class NeuralMomentScorer:
             print(f"[AI Engine] TRIBE v2 library not resident ({e}). Using Universal Adaptive Engine.")
             self.mode = "HEURISTIC"
 
-    def score_slice(self, video_slice_path: str, audio_slice_path: str, slice_words: list) -> dict:
+    def score_slice(
+        self,
+        video_slice_path: str,
+        audio_slice_path: str,
+        slice_words: list,
+        source_title: str = "",
+        enable_visual_hype: bool = True,
+    ) -> dict:
         """
-        Calculates second-by-second brain retention curve and overall viral score
-        for a 30s, 60s, 90s, or 180s candidate clip.
-        Returns:
-            {
-                "overall_score": float (0-100),
-                "hook_score": float (0-100),
-                "mid_score": float (0-100),
-                "payoff_score": float (0-100),
-                "curve": list of float (second-by-second 0-1)
-            }
+        Calculates second-by-second brain retention curve and multimodal viral score
+        (Audio Energy + Linguistic Hooks + Phase 3 Visual Hype Brain).
         """
         if self.mode == "TRIBE_V2":
-            return self._score_with_tribe(video_slice_path)
+            base = self._score_with_tribe(video_slice_path)
         else:
-            return self._score_with_multimodal_heuristic(audio_slice_path, slice_words)
+            base = self._score_with_multimodal_heuristic(audio_slice_path, slice_words)
+
+        visual_info = {"visual_score": None, "visual_summary": "", "engine": "disabled"}
+        if enable_visual_hype and video_slice_path and os.path.exists(video_slice_path):
+            try:
+                from core.visual_hype import analyze_visual_hype
+                transcript_txt = " ".join(w.get("word", "") for w in (slice_words or [])[:80])
+                visual_info = analyze_visual_hype(
+                    video_slice_path=video_slice_path,
+                    source_title=source_title,
+                    transcript=transcript_txt,
+                    enable_vlm=True,
+                )
+                v_score = visual_info.get("visual_score")
+                if v_score is not None:
+                    # Blend 72% Audio/Linguistic/TRIBE + 28% Visual Hype for true multimodal ranking
+                    blended = round((base["overall_score"] * 0.72) + (float(v_score) * 0.28), 1)
+                    base["overall_score"] = float(np.clip(blended, 0.0, 99.5))
+            except Exception as e:
+                print(f"[NeuralScorer] Visual Hype skip: {e}")
+
+        base["visual_score"] = visual_info.get("visual_score")
+        base["visual_summary"] = visual_info.get("visual_summary", "")
+        base["visual_engine"] = visual_info.get("engine", "disabled")
+        return base
 
     def _score_with_tribe(self, video_slice_path: str) -> dict:
         """Runs Meta TRIBE v2 foundation model inference on the slice."""

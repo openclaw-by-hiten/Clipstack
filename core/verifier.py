@@ -22,7 +22,9 @@ def verify_and_select_clips_streaming(
     candidates: List[Dict],
     target_count: int,
     target_duration: int,
-    progress_callback=None
+    progress_callback=None,
+    source_title: str = "",
+    enable_visual_hype: bool = True,
 ) -> List[Dict]:
     """
     STREAMING VERIFICATION LOOP:
@@ -118,7 +120,16 @@ def verify_and_select_clips_streaming(
                 for w in slice_words
             ]
 
-            score_data = scorer.score_slice(cand_slice_video, cand_slice_audio, rel_words)
+            try:
+                score_data = scorer.score_slice(
+                    cand_slice_video,
+                    cand_slice_audio,
+                    rel_words,
+                    source_title=source_title,
+                    enable_visual_hype=enable_visual_hype,
+                )
+            except TypeError:
+                score_data = scorer.score_slice(cand_slice_video, cand_slice_audio, rel_words)
             overall_score = score_data["overall_score"]
 
             cand_copy = dict(cand)
@@ -127,6 +138,9 @@ def verify_and_select_clips_streaming(
             cand_copy["mid_score"] = score_data["mid_score"]
             cand_copy["payoff_score"] = score_data["payoff_score"]
             cand_copy["curve"] = score_data["curve"]
+            cand_copy["visual_score"] = score_data.get("visual_score")
+            cand_copy["visual_summary"] = score_data.get("visual_summary", "")
+            cand_copy["visual_engine"] = score_data.get("visual_engine", "")
             cand_copy["slice_video_path"] = cand_slice_video
 
             if os.path.exists(cand_slice_audio):

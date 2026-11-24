@@ -1,5 +1,16 @@
 import os
+import re
 from core.config import THEMES
+
+# Power words that get instant viral highlight color emphasis (ASS BGR hex)
+_IMPACT_GOLD_WORDS = {
+    "MILLION", "BILLION", "THOUSAND", "MONEY", "CASH", "PRIZE", "WIN", "WON",
+    "WINNER", "CHAMPION", "GOLD", "SECRET", "TRUTH", "GENIUS", "RECORD",
+}
+_IMPACT_ALERT_WORDS = {
+    "INSANE", "CRAZY", "IMPOSSIBLE", "MONSTER", "STOP", "NEVER", "DEAD",
+    "KILLED", "POLICE", "COPS", "WRONG", "BAD", "BUSTED", "EXPLODED", "SHOCKING",
+}
 
 
 def format_ass_time(seconds: float) -> str:
@@ -76,6 +87,7 @@ WrapStyle: 0
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Default,{font_name},{font_size},{theme['primary_color']},{theme['highlight_color']},{theme['outline_color']},&H80000000,-1,0,0,0,100,100,2,0,1,{theme['outline']},{theme['shadow']},{alignment},{margin_lr},{margin_lr},{margin_v},1
+Style: Glow,{font_name},{font_size},{theme['highlight_color']},{theme['highlight_color']},{theme['highlight_color']},&H00000000,-1,0,0,0,100,100,2,0,1,{max(6, theme['outline'] + 4)},0,{alignment},{margin_lr},{margin_lr},{margin_v},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -144,33 +156,43 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             global_timeline = line_end
 
             text_tokens = []
+            glow_tokens = []
             for j, item in enumerate(phrase):
                 word_clean = item["word"].upper()
+                bare_w = re.sub(r"[^A-Z0-9$]", "", word_clean)
+                # Dynamic power-word accent color on active word
+                active_col = theme["highlight_color"]
+                if bare_w in _IMPACT_ALERT_WORDS:
+                    active_col = "&H003B4BFF&"  # Vivid Neon Red-Orange
+                elif bare_w in _IMPACT_GOLD_WORDS or "$" in word_clean:
+                    active_col = "&H0000E5FF&"  # Rich Viral Gold
+
                 if j == k:
                     if theme["animation"] == "bounce":
+                        # Spring pop-in motion (After-Effects-grade overshoot -> settle)
                         token = (
                             r"{\c"
-                            + theme["highlight_color"]
-                            + r"\t(0,60,\fscx112\fscy112)\t(60,120,\fscx100\fscy100)}"
+                            + active_col
+                            + r"\fscx88\fscy88\t(0,65,\fscx115\fscy115)\t(65,145,\fscx100\fscy100)}"
                             + word_clean
-                            + r"{\c"
+                            + r"{\fscx100\fscy100\c"
                             + theme["primary_color"]
                             + r"}"
                         )
                     elif theme["animation"] == "flash":
                         token = (
                             r"{\c"
-                            + theme["highlight_color"]
-                            + r"\frz-2}"
+                            + active_col
+                            + r"\frz-2\fscx92\fscy92\t(0,60,\fscx114\fscy114)\t(60,130,\fscx100\fscy100)}"
                             + word_clean
-                            + r"{\frz0\c"
+                            + r"{\frz0\fscx100\fscy100\c"
                             + theme["primary_color"]
                             + r"}"
                         )
                     else:
                         token = (
                             r"{\c"
-                            + theme["highlight_color"]
+                            + active_col
                             + r"}"
                             + word_clean
                             + r"{\c"
@@ -178,13 +200,19 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                             + r"}"
                         )
                     text_tokens.append(token)
+                    glow_tokens.append(r"{\alpha&H96&\blur10\c" + active_col + r"}" + word_clean + r"{\alpha&HFF&}")
                 else:
                     text_tokens.append(word_clean)
+                    glow_tokens.append(r"{\alpha&HFF&}" + word_clean)
 
             line_text = " ".join(text_tokens)
             w_start_str = format_ass_time(line_start)
             w_end_str = format_ass_time(line_end)
-            events.append(f"Dialogue: 0,{w_start_str},{w_end_str},Default,,0,0,0,,{line_text}\n")
+            # Soft neon glow halo underneath active word on high-energy themes
+            if theme["animation"] in ("bounce", "flash"):
+                glow_text = " ".join(glow_tokens)
+                events.append(f"Dialogue: 0,{w_start_str},{w_end_str},Glow,,0,0,0,,{glow_text}\n")
+            events.append(f"Dialogue: 1,{w_start_str},{w_end_str},Default,,0,0,0,,{line_text}\n")
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(header)

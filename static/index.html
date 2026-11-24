@@ -252,6 +252,33 @@
             <input type="checkbox" id="grainToggle" class="w-4 h-4 accent-yellow-400 rounded shrink-0" />
             <span>Subtle Film Grain (Optional)</span>
           </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="wordAlignToggle" checked class="w-4 h-4 accent-emerald-400 rounded shrink-0" />
+            <span><strong class="text-emerald-400">⚡ Word-Perfect Sync</strong> (Acoustic align)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="studioAudioToggle" checked class="w-4 h-4 accent-cyan-400 rounded shrink-0" />
+            <span><strong class="text-cyan-400">🎙️ Studio Voice (-14 LUFS)</strong> (Denoise + norm)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="visualHypeToggle" checked class="w-4 h-4 accent-purple-400 rounded shrink-0" />
+            <span><strong class="text-purple-400">🧠 Visual Hype AI</strong> (Scene &amp; action vision)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="deadAirToggle" class="w-4 h-4 accent-rose-400 rounded shrink-0" />
+            <span><strong class="text-rose-400">✂️ Kill Dead Air</strong> (Auto-trim silence)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="fps60Toggle" class="w-4 h-4 accent-sky-400 rounded shrink-0" />
+            <span><strong class="text-sky-400">🚀 60 FPS Boost</strong> (Smooth gaming/sports)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="stripMusicToggle" class="w-4 h-4 accent-fuchsia-400 rounded shrink-0" />
+            <span><strong class="text-fuchsia-400">🎵 Strip BG Music</strong> (Demucs vocal isolate)</span>
+          </label>
+        </div>
+        <div class="pt-1">
+          <input type="text" id="hookVoiceoverText" placeholder="Optional AI Hook Voiceover (e.g. Wait till you see what spawned in GTA 6...)" class="w-full px-3 py-2 text-xs rounded-lg bg-neutral-900/90 border border-neutral-800 text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-amber-400/60" />
         </div>
       </div>
 
@@ -1413,7 +1440,14 @@
         ai_thumbnail: document.getElementById('aiThumbToggle').checked,
         header_title: document.getElementById('headerTitle').value.trim() || null,
         enable_vignette: document.getElementById('vignetteToggle').checked,
-        enable_grain: document.getElementById('grainToggle').checked
+        enable_grain: document.getElementById('grainToggle').checked,
+        word_align: document.getElementById('wordAlignToggle').checked,
+        studio_audio: document.getElementById('studioAudioToggle').checked,
+        enable_visual_hype: document.getElementById('visualHypeToggle').checked,
+        kill_dead_air: document.getElementById('deadAirToggle').checked,
+        enable_60fps: document.getElementById('fps60Toggle').checked,
+        strip_music: document.getElementById('stripMusicToggle').checked,
+        hook_voiceover_text: (document.getElementById('hookVoiceoverText').value || '').trim() || null
       };
 
       document.getElementById('generateBtn').disabled = true;

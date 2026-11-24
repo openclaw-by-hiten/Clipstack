@@ -86,6 +86,14 @@ class ProcessRequest(BaseModel):
     enable_grain: bool = False
     ai_thumbnail: bool = True
     custom_thumbnail_path: Optional[str] = None
+    # ClipStack v3 Pro Engine controls (Phases 1-3)
+    kill_dead_air: bool = False
+    word_align: bool = True
+    studio_audio: bool = True
+    strip_music: bool = False
+    enable_visual_hype: bool = True
+    enable_60fps: bool = False
+    hook_voiceover_text: Optional[str] = None
 
 @app.websocket("/ws/progress")
 async def websocket_endpoint(websocket: WebSocket):

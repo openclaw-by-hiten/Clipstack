@@ -961,6 +961,7 @@ def generate_clip_thumbnail(
     source_title: str = None,
     aspect_ratio: str = "9:16",
     use_ai: bool = True,
+    visual_summary: str = None,
 ) -> str:
     """
     Generates a topic-accurate 8K hyper-realistic AI thumbnail for ANY video clip:
@@ -1007,6 +1008,10 @@ def generate_clip_thumbnail(
     base_im: Optional[Image.Image] = None
     if use_ai:
         prompt = _build_topic_scene_prompt(context, clip_index=clip_index, aspect_ratio=aspect_ratio)
+        if visual_summary and len(visual_summary.strip()) >= 8:
+            clean_vs = _clean_text_raw(visual_summary)[:120]
+            if clean_vs:
+                prompt = f"{prompt}, visual atmosphere: {clean_vs}"
         seed_input = f"{context['title_clean']}|{context['hook_clean']}|{clip_index}|{aspect_ratio}"
         seed = (int(hashlib.md5(seed_input.encode("utf-8")).hexdigest()[:8], 16) % 899_999) + 100_000
 
